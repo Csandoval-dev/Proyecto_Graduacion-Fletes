@@ -54,7 +54,7 @@ function DashboardAdmin() {
             <div className="bg-indigo-600 p-2 rounded-lg">
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" /><path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05a2.5 2.5 0 014.9 0H18a1 1 0 001-1V8a1 1 0 00-1-1h-4z" /></svg>
             </div>
-            <span className="text-xl font-bold tracking-tight">Fletes <span className="text-indigo-400">Pro</span></span>
+            <span className="text-xl font-bold tracking-tight">Fletia <span className="text-indigo-400">HND</span></span>
           </div>
         </div>
 
@@ -90,7 +90,7 @@ function DashboardAdmin() {
           <div className="flex items-center gap-4">
             <div className="text-right mr-2">
               <p className="text-xs font-bold text-slate-800 leading-none">{usuario?.nombre}</p>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Super Admin</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black"> Admin</p>
             </div>
             <button 
               onClick={cerrarSesion}

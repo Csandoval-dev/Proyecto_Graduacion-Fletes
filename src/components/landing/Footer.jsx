@@ -46,7 +46,7 @@ export const Footer = () => {
                 <span className="text-black font-bold text-base">F</span>
               </div>
               <span className="text-xl font-bold">
-                Fletia<span className="font-normal">HDN</span>
+                Fletia<span className="font-normal">HND</span>
               </span>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed mb-6">
@@ -54,7 +54,7 @@ export const Footer = () => {
             </p>
             <div className="text-sm text-gray-400">
               <p className="mb-1">📍 San Pedro Sula, Honduras</p>
-              <p>📧 contacto@fletiaHDN.com</p>
+              <p>📧 contacto@fletiaHND.com</p>
             </div>
           </motion.div>
 

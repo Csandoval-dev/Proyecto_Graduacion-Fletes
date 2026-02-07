@@ -68,12 +68,7 @@ function Landing() {
       <Footer />
 
       {/* Botón flotante opcional (WhatsApp o soporte) */}
-      <button 
-        className="fixed bottom-6 right-6 w-14 h-14 bg-black text-white rounded-full shadow-2xl hover:scale-110 transition-transform duration-300 flex items-center justify-center z-40"
-        aria-label="Contactar por WhatsApp"
-      >
-        <span className="text-2xl">💬</span>
-      </button>
+      
     </div>
   );
 }

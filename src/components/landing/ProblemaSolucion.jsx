@@ -90,7 +90,7 @@ export const ProblemaSolucion = () => {
             >
               <div className="relative rounded-2xl overflow-hidden shadow-xl">
                 <img
-                  src="https://images.unsplash.com/photo-1605810230434-7631ac76ec81?auto=format&fit=crop&q=80&w=800"
+                  src="https://img.freepik.com/vector-gratis/conjunto-logotipos-camiones-diseno-plano_23-2148944155.jpg?semt=ais_hybrid&w=740&q=80"
                   alt="Solución plataforma digital"
                   className="w-full h-64 md:h-96 object-cover"
                 />

@@ -114,7 +114,7 @@ export const Hero = () => {
           >
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
               <img
-                src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=800"
+                src="https://static.retail.autofact.cl/blog/c_img_740x370.1hr4t8legi14zt.jpg"
                 alt="Transportista profesional"
                 className="w-full h-auto object-cover"
               />
