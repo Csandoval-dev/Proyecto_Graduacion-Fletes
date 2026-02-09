@@ -47,10 +47,9 @@ function App() {
           element={<RoleBasedRoute />} 
         />
 
-        {/* ========================================
+        {/* 
             RUTAS PROTEGIDAS - CLIENTE
-            Solo accesibles para usuarios con rol "cliente"
-        ======================================== */}
+             */}
         
         <Route 
           path="/cliente/dashboard" 
@@ -61,10 +60,8 @@ function App() {
           } 
         />
 
-        {/* ========================================
-            RUTAS PROTEGIDAS - TRANSPORTISTA
-            Solo accesibles para usuarios con rol "transportista"
-        ======================================== */}
+        {/* 
+            RUTAS PROTEGIDAS - TRANSPORTISTA */}
         
         <Route 
           path="/transportista/dashboard" 
@@ -86,8 +83,7 @@ function App() {
         />
         
         {/* 
-          NOTA: Mantener compatibilidad con ruta antigua
-          /perfil-transportista redirige a /transportista/perfil
+         
         */}
         <Route 
           path="/perfil-transportista" 
@@ -98,10 +94,9 @@ function App() {
           } 
         />
 
-        {/* ========================================
+        {/* 
             RUTAS PROTEGIDAS - ADMINISTRADOR
-            Solo accesibles para usuarios con rol "administrador"
-        ======================================== */}
+            */}
         
         <Route 
           path="/admin/dashboard" 
@@ -112,12 +107,11 @@ function App() {
           } 
         />
 
-        {/* ========================================
-            RUTA 404 - NO ENCONTRADA
-            TODO: Crear página 404 personalizada
-        ======================================== */}
+        {
+          
+         }
         
-        {/* Por ahora redirige al landing */}
+        {/*  */}
         <Route 
           path="*" 
           element={<Landing />} 

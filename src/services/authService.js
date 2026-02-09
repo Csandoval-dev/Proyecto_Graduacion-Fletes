@@ -13,8 +13,7 @@ import { auth, db } from "../firebase/firebase";
 /**
  * REGISTRAR NUEVO USUARIO
  * 
- * Crea una cuenta de usuario en Firebase Authentication
- * y registra sus datos en Firestore
+ * 
  * 
  * @param {string} email - Correo electrónico del usuario
  * @param {string} password - Contraseña del usuario
@@ -32,18 +31,18 @@ export const registrarUsuario = async (email, password, datosUsuario) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // 2. Crear documento en Firestore - colección "usuarios"
+    //  Crear documento en Firestore - colección "usuarios
     await setDoc(doc(db, "usuarios", user.uid), {
       email: email,
       nombre: datosUsuario.nombre,
       telefono: datosUsuario.telefono,
-      rol: datosUsuario.rol, // "cliente", "transportista" o "administrador"
+      rol: datosUsuario.rol, // cliente", transportista o administrador
       fotoPerfil: "",
       createdAt: serverTimestamp(),
       activo: true
     });
 
-    // 3. Si es transportista, crear documento en colección "transportistas"
+    // Si es transportista, crear documento en colección "transportistas"
     if (datosUsuario.rol === "transportista") {
       await setDoc(doc(db, "transportistas", user.uid), {
         usuarioId: user.uid,
@@ -102,7 +101,7 @@ export const iniciarSesion = async (email, password) => {
  * INICIAR SESIÓN CON GOOGLE
  * 
  * Abre ventana emergente para autenticación con Google
- * Si es un usuario nuevo, crea su perfil automáticamente como "cliente"
+ * Si es un usuario nuevo, crea su perfil automáticamente como cliente
  * 
  * @returns {Object} 
  */
@@ -155,7 +154,7 @@ export const obtenerRolUsuario = async (uid) => {
       const userData = docSnap.data();
       return { 
         success: true, 
-        rol: userData.rol // "cliente", "transportista" o "administrador"
+        rol: userData.rol // cliente, transportista o administrador
       };
     } else {
       return { 
