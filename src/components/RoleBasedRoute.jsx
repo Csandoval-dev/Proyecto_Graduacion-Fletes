@@ -12,7 +12,7 @@ function RoleBasedRoute() {
     // Escuchamos si el usuario está logueado
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // LLAMAMOS AL SERVICIO (Aquí es donde usas la función)
+        // si el usuario esta loguedo obtenemos su rol
         const resultado = await obtenerRolUsuario(user.uid);
         if (resultado.success) {
           setUserRole(resultado.rol);

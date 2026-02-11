@@ -1,9 +1,8 @@
-// src/pages/DashboardAdmin/components/GestionUsuarios.jsx
 import { useState, useEffect } from "react";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
 
-// Iconos SVG
+// --- COMPONENTES DE ICONOS (SVG) ---
 const IconUser = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -28,62 +27,83 @@ function GestionUsuarios() {
   const [filtroRol, setFiltroRol] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
 
+  // useEffect: Se ejecuta al montar el componente
   useEffect(() => {
-    cargarUsuarios();
+    cargarDatos();
   }, []);
 
-  const cargarUsuarios = async () => {
+  // FUNCIÓN PRINCIPAL: Carga usuarios y transportistas simultáneamente
+  const cargarDatos = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, "usuarios"));
-      const usuariosData = querySnapshot.docs.map(doc => ({
+      setLoading(true);
+      
+      // Ejecutamos ambas consultas al mismo tiempo para ganar velocidad
+      const [snapUsuarios, snapTransp] = await Promise.all([
+        getDocs(collection(db, "usuarios")),
+        getDocs(collection(db, "transportistas"))
+      ]);
+
+      // Formateamos los datos de la colección 'usuarios'
+      const listaUsuarios = snapUsuarios.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-      setUsuarios(usuariosData);
+
+      // Formateamos los datos de 'transportistas' asegurando que tengan el rol correcto
+      const listaTransp = snapTransp.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        rol: "transportista" // Forzamos el rol por si no viene en el documento
+      }));
+
+      // Unimos ambas listas en un solo estado
+      setUsuarios([...listaUsuarios, ...listaTransp]);
+      
     } catch (error) {
-      console.error("Error al cargar usuarios:", error);
+      console.error("Error al cargar datos:", error);
     } finally {
       setLoading(false);
     }
   };
-const cargaTransportistas = async () => {
-  try {
-    const querySnapshot = await getDocs(collection(db, "transportistas"));
-    const usuariosData = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    setUsuarios(usuariosData);
-  } catch (error) {
-    console.error("Error al cargar usuarios:", error);
-  } finally {
-    setLoading(false);
-  }
-};
-  const toggleActivarUsuario = async (usuarioId, estadoActual) => {
+
+  // FUNCIÓN PARA ACTIVAR/DESACTIVAR: Detecta automáticamente la colección
+  const toggleActivarUsuario = async (usuario) => {
     try {
-      await updateDoc(doc(db, "usuarios", usuarioId), {
-        activo: !estadoActual
+      // Si el rol es transportista, buscamos en su colección, si no, en usuarios
+      const nombreColeccion = usuario.rol === "transportista" ? "transportistas" : "usuarios";
+      const nuevoEstado = !usuario.activo;
+
+      // Actualizar en Firebase
+      await updateDoc(doc(db, nombreColeccion, usuario.id), {
+        activo: nuevoEstado
       });
-      // Actualizar el estado local
-      setUsuarios(usuarios.map(u => 
-        u.id === usuarioId ? { ...u, activo: !estadoActual } : u
-      ));
+
+      // Actualizar el estado local para que la UI cambie al instante
+      setUsuarios(prevUsuarios => 
+        prevUsuarios.map(u => 
+          u.id === usuario.id ? { ...u, activo: nuevoEstado } : u
+        )
+      );
     } catch (error) {
       console.error("Error al actualizar usuario:", error);
-      alert("Error al actualizar el usuario");
+      alert("No se pudo actualizar el estado del usuario");
     }
   };
 
-  // Filtrar usuarios
+  // Lógica de filtrado (Nombre/Email + Rol)
   const usuariosFiltrados = usuarios.filter(usuario => {
-    const coincideBusqueda = usuario.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             usuario.email.toLowerCase().includes(searchTerm.toLowerCase());
+    // Usamos ?. para evitar errores si el campo no existe en Firebase
+    const nombre = usuario.nombre?.toLowerCase() || "";
+    const email = usuario.email?.toLowerCase() || "";
+    const busqueda = searchTerm.toLowerCase();
+
+    const coincideBusqueda = nombre.includes(busqueda) || email.includes(busqueda);
     const coincideRol = filtroRol === "todos" || usuario.rol === filtroRol;
+
     return coincideBusqueda && coincideRol;
   });
 
-  // Obtener badge de rol
+  // Estilos de las etiquetas de rol
   const getBadgeRol = (rol) => {
     const styles = {
       cliente: "bg-blue-100 text-blue-700",
@@ -103,7 +123,7 @@ const cargaTransportistas = async () => {
 
   return (
     <div className="space-y-6">
-      {/* Header con estadísticas */}
+      {/* --- WIDGETS DE ESTADÍSTICAS --- */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Usuarios</p>
@@ -129,10 +149,9 @@ const cargaTransportistas = async () => {
         </div>
       </div>
 
-      {/* Filtros y búsqueda */}
+      {/* --- BARRA DE BÚSQUEDA Y FILTROS --- */}
       <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex flex-col md:flex-row gap-4">
-          {/* Búsqueda */}
           <div className="flex-1">
             <input
               type="text"
@@ -143,8 +162,7 @@ const cargaTransportistas = async () => {
             />
           </div>
 
-          {/* Filtro por rol */}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {["todos", "cliente", "transportista", "administrador"].map((rol) => (
               <button
                 key={rol}
@@ -162,30 +180,18 @@ const cargaTransportistas = async () => {
         </div>
       </div>
 
-      {/* Tabla de usuarios */}
+      {/* --- TABLA DE USUARIOS --- */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
-                  Usuario
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
-                  Teléfono
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
-                  Rol
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-4 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">
-                  Acciones
-                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Usuario</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Teléfono</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Rol</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Estado</th>
+                <th className="px-6 py-4 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -193,20 +199,20 @@ const cargaTransportistas = async () => {
                 <tr key={usuario.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      <div className="bg-indigo-100 p-2 rounded-full">
+                      <div className="bg-indigo-100 p-2 rounded-full text-indigo-600">
                         <IconUser />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-slate-900">{usuario.nombre}</p>
+                        <p className="text-sm font-bold text-slate-900">{usuario.nombre || "Sin nombre"}</p>
                         <p className="text-xs text-slate-500">ID: {usuario.id.slice(0, 8)}...</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <p className="text-sm text-slate-700">{usuario.email}</p>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                    {usuario.email}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <p className="text-sm text-slate-700">{usuario.telefono || "N/A"}</p>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                    {usuario.telefono || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${getBadgeRol(usuario.rol)}`}>
@@ -226,7 +232,7 @@ const cargaTransportistas = async () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <button
-                      onClick={() => toggleActivarUsuario(usuario.id, usuario.activo)}
+                      onClick={() => toggleActivarUsuario(usuario)}
                       className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
                         usuario.activo
                           ? "bg-red-100 text-red-700 hover:bg-red-200"
@@ -244,7 +250,7 @@ const cargaTransportistas = async () => {
 
         {usuariosFiltrados.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-slate-500 text-sm">No se encontraron usuarios con los filtros aplicados</p>
+            <p className="text-slate-500 text-sm">No se encontraron usuarios</p>
           </div>
         )}
       </div>
