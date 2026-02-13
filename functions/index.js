@@ -8,10 +8,7 @@ admin.initializeApp();
 const gmailEmail = defineSecret("GMAIL_EMAIL");
 const gmailPassword = defineSecret("GMAIL_PASSWORD");
 
-/**
- * FUNCIÓN: APROBAR TRANSPORTISTA
- * Actualizada para crear perfil en colección 'usuarios' y 'transportistas'
- */
+//funcion para  aprobar transportita esa funcion es crucial realiza varias tareas:crea el usuario en firebase auth, le asigna el rol de transportista, actualiza su estado y envia un correo con sus credenciales
 exports.aprobarTransportista = onCall(
   {
     cors: true,
@@ -128,9 +125,8 @@ exports.aprobarTransportista = onCall(
   }
 );
 
-/**
- * FUNCIÓN: RECHAZAR TRANSPORTISTA
- */
+//FUNCIÓN: RECHAZAR TRANSPORTISTA
+ 
 exports.rechazarTransportista = onCall(
   {
     cors: true,

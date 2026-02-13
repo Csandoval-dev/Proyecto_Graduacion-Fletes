@@ -1,4 +1,3 @@
-// src/pages/DashboardAdmin/DashboardAdmin.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
@@ -10,11 +9,11 @@ import { cerrarSesion } from "../../services/authService";
 import GestionUsuarios from "./components/GestionUsuarios";
 import AprobarTransportistas from "./components/AprobarTransportistas";
 
-// Iconos
-const IconDashboard = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>;
-const IconUsers = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;
-const IconTruck = () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" /><path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05a2.5 2.5 0 014.9 0H18a1 1 0 001-1V8a1 1 0 00-1-1h-4z" /></svg>;
-const IconClipboard = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>;
+// Iconos mejorados con trazos más finos
+const IconDashboard = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" /></svg>;
+const IconUsers = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>;
+const IconTruck = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1" /></svg>;
+const IconClipboard = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>;
 
 function DashboardAdmin() {
   const navigate = useNavigate();
@@ -22,7 +21,6 @@ function DashboardAdmin() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("inicio");
   
-  // Estados para estadísticas
   const [stats, setStats] = useState({
     totalUsuarios: 0,
     totalClientes: 0,
@@ -56,11 +54,9 @@ function DashboardAdmin() {
 
   const cargarEstadisticas = async () => {
     try {
-      // Total de usuarios
       const usuariosSnapshot = await getDocs(collection(db, "usuarios"));
       const totalUsuarios = usuariosSnapshot.size;
       
-      // Contar por roles
       let totalClientes = 0;
       let totalTransportistas = 0;
       usuariosSnapshot.docs.forEach(doc => {
@@ -69,14 +65,12 @@ function DashboardAdmin() {
         if (data.rol === "transportista") totalTransportistas++;
       });
 
-      // Transportistas pendientes de verificación
       const transportistasPendientesQuery = query(
         collection(db, "transportistas"),
         where("verificado", "==", false)
       );
       const transportistasPendientesSnapshot = await getDocs(transportistasPendientesQuery);
       
-      // Solicitudes activas
       const solicitudesActivasQuery = query(
         collection(db, "solicitudes"),
         where("estado", "in", ["pendiente", "asignada", "en_proceso"])
@@ -96,65 +90,64 @@ function DashboardAdmin() {
   };
 
   if (loading) return (
-    <div className="flex h-screen items-center justify-center bg-slate-900">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+    <div className="flex h-screen items-center justify-center bg-white">
+      <div className="flex flex-col items-center gap-3">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-600"></div>
+        <span className="text-slate-500 font-medium text-sm animate-pulse">Cargando panel...</span>
+      </div>
     </div>
   );
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
+    <div className="flex h-screen bg-[#F8FAFC] overflow-hidden font-sans">
       
       {/* --- SIDEBAR IZQUIERDA --- */}
-      <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col transition-all duration-300">
-        <div className="p-6">
-          <div className="flex items-center gap-3 text-white">
-            <div className="bg-indigo-600 p-2 rounded-lg">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" /><path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05a2.5 2.5 0 014.9 0H18a1 1 0 001-1V8a1 1 0 00-1-1h-4z" /></svg>
+      <aside className="w-72 bg-slate-900 text-slate-400 flex flex-col shadow-2xl z-20">
+        <div className="p-8">
+          <div className="flex items-center gap-3">
+            <div className="bg-indigo-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/20 text-white">
+              <IconTruck />
             </div>
-            <span className="text-xl font-bold tracking-tight">Fletia <span className="text-indigo-400">HND</span></span>
+            <span className="text-xl font-black text-white tracking-tight italic">FLETIA<span className="text-indigo-500">HND</span></span>
           </div>
         </div>
 
-        <nav className="flex-1 px-4 space-y-2">
-          <button 
-            onClick={() => setActiveTab("inicio")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === "inicio" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/50" : "hover:bg-slate-800"}`}
-          >
-            <IconDashboard /> <span className="font-medium text-sm">Dashboard</span>
-          </button>
+        <nav className="flex-1 px-6 space-y-1.5">
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-4 mb-4">Menú Principal</p>
           
-          <button 
-            onClick={() => setActiveTab("usuarios")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === "usuarios" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/50" : "hover:bg-slate-800"}`}
-          >
-            <IconUsers /> <span className="font-medium text-sm">Usuarios</span>
-          </button>
-
-          <button 
-            onClick={() => setActiveTab("transportistas")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative ${activeTab === "transportistas" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/50" : "hover:bg-slate-800"}`}
-          >
-            <IconTruck /> 
-            <span className="font-medium text-sm">Aprobar Transportistas</span>
-            {stats.transportistasPendientes > 0 && (
-              <span className="absolute right-3 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                {stats.transportistasPendientes}
-              </span>
-            )}
-          </button>
-
-          <button 
-            onClick={() => setActiveTab("solicitudes")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === "solicitudes" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/50" : "hover:bg-slate-800"}`}
-          >
-            <IconClipboard /> <span className="font-medium text-sm">Solicitudes</span>
-          </button>
+          {[
+            { id: "inicio", label: "Dashboard", icon: <IconDashboard /> },
+            { id: "usuarios", label: "Gestión de Usuarios", icon: <IconUsers /> },
+            { id: "transportistas", label: "Aprobar Transportistas", icon: <IconTruck />, badge: stats.transportistasPendientes },
+            { id: "solicitudes", label: "Solicitudes", icon: <IconClipboard /> },
+          ].map((item) => (
+            <button 
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-200 group ${activeTab === item.id ? "bg-indigo-600 text-white shadow-xl shadow-indigo-600/20" : "hover:bg-slate-800 hover:text-slate-200"}`}
+            >
+              <div className="flex items-center gap-3">
+                <span className={`${activeTab === item.id ? "text-white" : "text-slate-500 group-hover:text-indigo-400"}`}>{item.icon}</span>
+                <span className="font-semibold text-sm">{item.label}</span>
+              </div>
+              {item.badge > 0 && (
+                <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full ring-4 ring-slate-900">
+                  {item.badge}
+                </span>
+              )}
+            </button>
+          ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-800 text-xs">
-          <div className="bg-slate-800 p-3 rounded-lg">
-            <p className="text-slate-500 mb-1 font-semibold uppercase">Admin Logged</p>
-            <p className="text-slate-300 truncate">{usuario?.nombre}</p>
+        <div className="p-6">
+          <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 flex items-center gap-3">
+             <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-inner">
+                {usuario?.nombre?.charAt(0)}
+             </div>
+             <div className="flex-1 overflow-hidden">
+               <p className="text-xs font-bold text-white truncate">{usuario?.nombre}</p>
+               <p className="text-[10px] text-indigo-400 font-medium">Administrador</p>
+             </div>
           </div>
         </div>
       </aside>
@@ -163,102 +156,110 @@ function DashboardAdmin() {
       <main className="flex-1 flex flex-col overflow-y-auto">
         
         {/* Header Superior */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-10">
-          <h2 className="text-slate-800 font-semibold text-lg capitalize">{activeTab}</h2>
-          <div className="flex items-center gap-4">
-            <div className="text-right mr-2">
-              <p className="text-xs font-bold text-slate-800 leading-none">{usuario?.nombre}</p>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Admin</p>
-            </div>
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-10 sticky top-0 z-10">
+          <div>
+            <h2 className="text-slate-400 text-[9px] uppercase tracking-[0.15em] font-black">Panel de Control</h2>
+            <p className="text-slate-900 font-extrabold text-xl capitalize">{activeTab}</p>
+          </div>
+          
+          <div className="flex items-center gap-6">
+            <div className="h-10 w-[1px] bg-slate-200"></div>
             <button 
               onClick={cerrarSesion}
-              className="bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 p-2 rounded-full transition-colors"
-              title="Cerrar Sesión"
+              className="group flex items-center gap-2 bg-slate-50 hover:bg-red-50 text-slate-500 hover:text-red-600 px-4 py-2 rounded-xl transition-all border border-slate-200 hover:border-red-100"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+              <span className="text-xs font-bold">Salir</span>
+              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
             </button>
           </div>
         </header>
 
         {/* Workspace */}
-        <div className="p-8">
+        <div className="p-10">
           <div className="max-w-7xl mx-auto">
             
-            {/* VISTA INICIO */}
             {activeTab === "inicio" && (
               <>
-                <div className="mb-8">
-                  <h1 className="text-3xl font-black text-slate-900">Hola de nuevo, {usuario?.nombre?.split(' ')[0]} 👋</h1>
-                  <p className="text-slate-500 mt-1 text-sm">Aquí tienes el resumen de lo que está pasando hoy.</p>
+                <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tight">¡Hola, {usuario?.nombre?.split(' ')[0]}! </h1>
+                    <p className="text-slate-500 mt-2 font-medium">Esto es lo que ha pasado en <span className="text-indigo-600 font-bold">Fletia</span> desde tu última visita.</p>
+                  </div>
+                  <div className="bg-white px-6 py-3 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Sistema Online</span>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                   
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="bg-blue-100 text-blue-600 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
+                  {/* Card: Total Usuarios */}
+                  <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                    <div className="bg-blue-50 text-blue-600 w-12 h-12 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                       <IconUsers />
                     </div>
-                    <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Usuarios</h3>
-                    <p className="text-3xl font-black text-slate-900 mt-1">{stats.totalUsuarios}</p>
+                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Total Usuarios</p>
+                    <p className="text-4xl font-black text-slate-900 mt-1">{stats.totalUsuarios}</p>
                   </div>
 
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="bg-green-100 text-green-600 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
+                  {/* Card: Clientes */}
+                  <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                    <div className="bg-emerald-50 text-emerald-600 w-12 h-12 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                       <IconUsers />
                     </div>
-                    <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider">Clientes</h3>
-                    <p className="text-3xl font-black text-green-600 mt-1">{stats.totalClientes}</p>
+                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Clientes</p>
+                    <p className="text-4xl font-black text-emerald-600 mt-1">{stats.totalClientes}</p>
                   </div>
 
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="bg-purple-100 text-purple-600 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
+                  {/* Card: Transportistas */}
+                  <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                    <div className="bg-indigo-50 text-indigo-600 w-12 h-12 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                       <IconTruck />
                     </div>
-                    <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider">Transportistas</h3>
-                    <p className="text-3xl font-black text-purple-600 mt-1">{stats.totalTransportistas}</p>
+                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Transportistas</p>
+                    <p className="text-4xl font-black text-indigo-600 mt-1">{stats.totalTransportistas}</p>
                   </div>
 
-                  <div 
-                    onClick={() => setActiveTab("transportistas")}
-                    className="bg-gradient-to-br from-orange-500 to-red-600 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all cursor-pointer"
-                  >
-                    <div className="bg-white/20 text-white w-10 h-10 rounded-lg flex items-center justify-center mb-4">
-                      <IconTruck />
-                    </div>
-                    <h3 className="text-white/90 text-xs font-bold uppercase tracking-wider">Esperando Aprobación</h3>
-                    <p className="text-4xl font-black text-white mt-1">{stats.transportistasPendientes}</p>
-                    <button className="mt-4 text-xs font-bold text-white hover:text-white/80 underline">
-                      Revisar ahora →
-                    </button>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-lg flex items-center justify-center mb-4">
+                   {/* Card: Solicitudes */}
+                   <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                    <div className="bg-slate-50 text-slate-600 w-12 h-12 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                       <IconClipboard />
                     </div>
-                    <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider">Solicitudes Activas</h3>
-                    <p className="text-3xl font-black text-indigo-600 mt-1">{stats.solicitudesActivas}</p>
+                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Solicitudes</p>
+                    <p className="text-4xl font-black text-slate-900 mt-1">{stats.solicitudesActivas}</p>
                   </div>
+
+                  {/* Card: Especial - Aprobación */}
+                  <div 
+                    onClick={() => setActiveTab("transportistas")}
+                    className="bg-indigo-600 p-6 rounded-[2rem] shadow-2xl shadow-indigo-200 hover:shadow-indigo-300 hover:-translate-y-1 transition-all duration-300 cursor-pointer relative overflow-hidden group col-span-1 md:col-span-2 xl:col-span-1"
+                  >
+                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                    <div className="bg-white/20 text-white w-12 h-12 rounded-2xl flex items-center justify-center mb-6 relative z-10">
+                      <IconTruck />
+                    </div>
+                    <p className="text-white/70 text-[10px] font-black uppercase tracking-widest relative z-10">Por Verificar</p>
+                    <p className="text-5xl font-black text-white mt-1 relative z-10">{stats.transportistasPendientes}</p>
+                    <p className="mt-4 text-[10px] font-bold text-indigo-100 underline decoration-2 underline-offset-4 relative z-10">Gestionar ahora →</p>
+                  </div>
+
                 </div>
               </>
             )}
 
-            {/* VISTA USUARIOS */}
-            {activeTab === "usuarios" && <GestionUsuarios />}
-
-            {/* VISTA APROBAR TRANSPORTISTAS */}
-            {activeTab === "transportistas" && <AprobarTransportistas />}
-
-            {/* VISTA SOLICITUDES (placeholder) */}
-            {activeTab === "solicitudes" && (
-              <div className="bg-white p-12 rounded-2xl border border-slate-200 text-center">
-                <div className="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <IconClipboard />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Gestión de Solicitudes</h3>
-                <p className="text-slate-500 text-sm">Módulo en desarrollo...</p>
-              </div>
-            )}
+            <div className="mt-4">
+               {activeTab === "usuarios" && <GestionUsuarios />}
+               {activeTab === "transportistas" && <AprobarTransportistas />}
+               {activeTab === "solicitudes" && (
+                 <div className="bg-white p-20 rounded-[3rem] border border-slate-200 text-center shadow-sm">
+                   <div className="bg-indigo-50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 text-indigo-600">
+                     <IconClipboard />
+                   </div>
+                   <h3 className="text-2xl font-black text-slate-900 mb-2">Módulo de Solicitudes</h3>
+                   <p className="text-slate-500 max-w-xs mx-auto text-sm font-medium leading-relaxed">Estamos trabajando para traerte el historial completo de viajes y fletes.</p>
+                 </div>
+               )}
+            </div>
           </div>
         </div>
       </main>

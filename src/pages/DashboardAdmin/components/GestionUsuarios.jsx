@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
 
-// --- COMPONENTES DE ICONOS (SVG) ---
+// --- COMPONENTES DE ICONOS Svg
 const IconUser = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -27,37 +27,25 @@ function GestionUsuarios() {
   const [filtroRol, setFiltroRol] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // useEffect: Se ejecuta al montar el componente
   useEffect(() => {
     cargarDatos();
   }, []);
 
-  // FUNCIÓN PRINCIPAL: Carga usuarios y transportistas simultáneamente
+ //Funcion de cargar datos del sistema
   const cargarDatos = async () => {
     try {
       setLoading(true);
       
-      // Ejecutamos ambas consultas al mismo tiempo para ganar velocidad
-      const [snapUsuarios, snapTransp] = await Promise.all([
-        getDocs(collection(db, "usuarios")),
-        getDocs(collection(db, "transportistas"))
-      ]);
+      // Obtenemos todos los documentos de la colección usuarios
+      const snapUsuarios = await getDocs(collection(db, "usuarios"));
 
-      // Formateamos los datos de la colección 'usuarios'
-      const listaUsuarios = snapUsuarios.docs.map(doc => ({
+      const listaCompleta = snapUsuarios.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
 
-      // Formateamos los datos de 'transportistas' asegurando que tengan el rol correcto
-      const listaTransp = snapTransp.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        rol: "transportista" // Forzamos el rol por si no viene en el documento
-      }));
-
-      // Unimos ambas listas en un solo estado
-      setUsuarios([...listaUsuarios, ...listaTransp]);
+      // Sincronizamos el estado con la lista única
+      setUsuarios(listaCompleta);
       
     } catch (error) {
       console.error("Error al cargar datos:", error);
@@ -66,33 +54,38 @@ function GestionUsuarios() {
     }
   };
 
-  // FUNCIÓN PARA ACTIVAR/DESACTIVAR: Detecta automáticamente la colección
+  //Funcion para activas o desactivar un usuario
   const toggleActivarUsuario = async (usuario) => {
     try {
-      // Si el rol es transportista, buscamos en su colección, si no, en usuarios
-      const nombreColeccion = usuario.rol === "transportista" ? "transportistas" : "usuarios";
       const nuevoEstado = !usuario.activo;
 
-      // Actualizar en Firebase
-      await updateDoc(doc(db, nombreColeccion, usuario.id), {
+      // Actualizamos siempre en la colección 'usuarios es la que manda en el Login
+      await updateDoc(doc(db, "usuarios", usuario.id), {
         activo: nuevoEstado
       });
 
-      // Actualizar el estado local para que la UI cambie al instante
+      //  Si el usuario es transportista, reflejamos el cambio en su perfil técnico
+      if (usuario.rol === "transportista") {
+        await updateDoc(doc(db, "transportistas", usuario.id), {
+          activo: nuevoEstado
+        });
+      }
+
+      // 3. Actualizamos la interfaz UI sin recargar la página
       setUsuarios(prevUsuarios => 
         prevUsuarios.map(u => 
           u.id === usuario.id ? { ...u, activo: nuevoEstado } : u
         )
       );
+
     } catch (error) {
       console.error("Error al actualizar usuario:", error);
-      alert("No se pudo actualizar el estado del usuario");
+      alert("No se pudo actualizar el estado del usuario. Revisa los permisos.");
     }
   };
 
-  // Lógica de filtrado (Nombre/Email + Rol)
+  // Filtrado combibando busqueda por nombre , email y rol.
   const usuariosFiltrados = usuarios.filter(usuario => {
-    // Usamos ?. para evitar errores si el campo no existe en Firebase
     const nombre = usuario.nombre?.toLowerCase() || "";
     const email = usuario.email?.toLowerCase() || "";
     const busqueda = searchTerm.toLowerCase();
@@ -103,7 +96,7 @@ function GestionUsuarios() {
     return coincideBusqueda && coincideRol;
   });
 
-  // Estilos de las etiquetas de rol
+  // Estilos visuales para las etiquetas de Rol
   const getBadgeRol = (rol) => {
     const styles = {
       cliente: "bg-blue-100 text-blue-700",
@@ -123,7 +116,7 @@ function GestionUsuarios() {
 
   return (
     <div className="space-y-6">
-      {/* --- WIDGETS DE ESTADÍSTICAS --- */}
+      {/*  WIDGETS DE ESTADÍSTICAS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Usuarios</p>
@@ -149,7 +142,7 @@ function GestionUsuarios() {
         </div>
       </div>
 
-      {/* --- BARRA DE BÚSQUEDA Y FILTROS --- */}
+      {/*BARRA DE BÚSQUEDA Y FILTROS */}
       <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
@@ -180,7 +173,7 @@ function GestionUsuarios() {
         </div>
       </div>
 
-      {/* --- TABLA DE USUARIOS --- */}
+      {/*  TABLA DE USUARIOS  */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -250,7 +243,7 @@ function GestionUsuarios() {
 
         {usuariosFiltrados.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-slate-500 text-sm">No se encontraron usuarios</p>
+            <p className="text-slate-500 text-sm">No se encontraron usuarios registrados en la plataforma.</p>
           </div>
         )}
       </div>

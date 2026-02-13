@@ -252,7 +252,7 @@ function PerfilTransportista() {
       });
 
       // Éxito - Mostrar mensaje y redirigir
-      alert("✅ ¡Solicitud enviada exitosamente! Te notificaremos por email cuando sea aprobada.");
+      alert(" ¡Solicitud enviada exitosamente! Te notificaremos por email cuando sea aprobada.");
       navigate("/");
 
     } catch (err) {
