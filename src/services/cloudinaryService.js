@@ -1,16 +1,23 @@
 
-const CLOUD_NAME = "dv0oz69cm"; // ← Tu cloud name
-const UPLOAD_PRESET = "fletia_uploads"; // ← El preset que acabas de crear
+const CLOUD_NAME = "dv0oz69cm"; // 
+const UPLOAD_PRESET = "fletia_uploads"; // 
 
 /**
  
  * 
  * @param {File} file - Archivo a subir
- * @param {string} folder - Carpeta donde guardar (opcional)
+ * @param {string} folder - Carpeta donde guardar l
  * @returns {Promise<Object>} { success: boolean, url?: string, error?: string }
  */
 export const subirArchivo = async (file, folder = "fletia") => {
   try {
+    const tiposPermitidos = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+    if( !validarTipoArchivo(file, tiposPermitidos)){
+      throw new Error("Tipo de Archivo no permitido");
+    }
+    if(!validarTamañoArchivo(file,5)){
+      throw new Error("El archivo excede el tamaño maximo de 5MB[");
+    }
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", UPLOAD_PRESET);
@@ -42,7 +49,7 @@ export const subirArchivo = async (file, folder = "fletia") => {
  * 
  * @param {FileList} files - Lista de archivos
  * @param {string} folder - Carpeta donde guardar
- * @returns {Promise<Object>} { success: boolean, urls: Array<string>, error?: string }
+ * @returns {Promise<Object>} {  }
  */
 export const subirMultiplesArchivos = async (files, folder = "fletia") => {
   try {

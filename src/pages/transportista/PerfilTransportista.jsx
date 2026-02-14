@@ -223,7 +223,7 @@ function PerfilTransportista() {
         descripcion: formData.descripcion,
         
         // Estado
-        disponible: false,
+        disponible: true,
         verificado: false,
         
         // Vehículo

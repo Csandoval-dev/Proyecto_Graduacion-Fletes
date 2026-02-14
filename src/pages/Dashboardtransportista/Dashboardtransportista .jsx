@@ -11,31 +11,26 @@ function DashboardTransportista() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Escuchar cambios en el estado de autenticación
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          // 1. Intentamos la ruta directa (ID exacto)
+          // Lógica de búsqueda (Directo -> Email -> Usuarios)
           const directRef = doc(db, "transportistas", user.uid);
           const directSnap = await getDoc(directRef);
 
           if (directSnap.exists()) {
             setPerfil(directSnap.data());
           } else {
-            // 2. PLAN B: Si el ID no coincide, buscamos por correo en la colección transportistas
-            // Esto sucede si el Admin creó el documento con un ID aleatorio en lugar del UID del usuario
             const transCol = collection(db, "transportistas");
             const q = query(transCol, where("email", "==", user.email));
             const querySnapshot = await getDocs(q);
 
             if (!querySnapshot.empty) {
-              // Si lo encuentra por correo, tomamos ese
               setPerfil(querySnapshot.docs[0].data());
             } else {
-              // 3. PLAN C: Si no existe en transportistas del todo, sacamos lo básico de 'usuarios'
               const userSnap = await getDoc(doc(db, "usuarios", user.uid));
-              if (userSnap.exists()) {
-                setPerfil(userSnap.data());
-              }
+              if (userSnap.exists()) setPerfil(userSnap.data());
             }
           }
         } catch (error) {
@@ -49,84 +44,145 @@ function DashboardTransportista() {
     return () => unsubscribe();
   }, [navigate]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-black text-slate-400">CARGANDO FLETIA...</div>;
+  // Pantalla de carga
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="w-16 h-16 border-4 border-black border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="font-bold text-gray-600 text-sm">Cargando...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-4 md:p-10">
-      <div className="max-w-6xl mx-auto space-y-8">
-        
-        {/* Header Superior */}
-        <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-          <div>
-            <p className="text-[10px] font-black text-orange-600 uppercase tracking-[0.3em]">Panel de Control</p>
-            <h1 className="text-3xl font-black text-slate-900">Hola, {perfil?.nombre || "Transportista"}</h1>
-          </div>
-          <button onClick={cerrarSesion} className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-600 transition-all">
-            Salir
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* INFO CARD */}
-          <div className="lg:col-span-2 bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-full -mr-10 -mt-10"></div>
-            
-            <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-10">Información Profesional</h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 relative z-10">
-              <section>
-                <p className="text-[10px] font-black text-slate-400 uppercase mb-2">Estado del Servicio</p>
-                <p className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <span className={`w-3 h-3 rounded-full ${perfil?.disponible ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
-                  {perfil?.disponible ? 'Disponible para fletes' : 'Fuera de servicio'}
-                </p>
-              </section>
-
-              <section>
-                <p className="text-[10px] font-black text-orange-600 uppercase mb-2 tracking-widest">Zona de Operación</p>
-                <p className="text-2xl font-black text-slate-900 uppercase">{perfil?.zona || "No definida"}</p>
-              </section>
-
-              <section>
-                <p className="text-[10px] font-black text-slate-400 uppercase mb-2">Contacto Directo</p>
-                <p className="text-lg font-bold text-slate-900">{perfil?.telefono || "Sin teléfono"}</p>
-              </section>
-
-              <section>
-                <p className="text-[10px] font-black text-slate-400 uppercase mb-2">Correo de Enlace</p>
-                <p className="text-lg font-bold text-slate-900">{perfil?.email}</p>
-              </section>
+    <div className="min-h-screen bg-gray-50">
+      {/* NAVBAR SIMPLE */}
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo y nombre */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">F</span>
+              </div>
+              <span className="text-xl font-bold text-black">Fletia</span>
             </div>
-
-            <button onClick={() => navigate("/perfil-transportista")} className="mt-12 w-full sm:w-auto bg-orange-600 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-orange-200 hover:scale-105 transition-transform">
-              Actualizar Datos de Fletia
+            
+            {/* Botón salir */}
+            <button 
+              onClick={cerrarSesion}
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-100 rounded-lg transition-all"
+            >
+              Cerrar Sesión
             </button>
           </div>
+        </div>
+      </nav>
 
-          {/* STATUS CARD */}
+      {/* CONTENIDO PRINCIPAL */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Saludo con nombre completo */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-black mb-2">
+            Bienvenido, {perfil?.nombre || "Transportista"}
+          </h1>
+          <p className="text-gray-600">Panel de control</p>
+        </div>
+
+        {/* Grid principal */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Información del perfil - 2 columnas */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-lg font-bold text-black">Información del Perfil</h2>
+                {/* Estado en línea */}
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${perfil?.disponible ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'}`}>
+                  {perfil?.disponible ? '● Disponible' : '○ No disponible'}
+                </span>
+              </div>
+
+              {/* Datos en grid */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-gray-500 uppercase">Nombre Completo</label>
+                  <p className="text-base font-semibold text-black mt-1">{perfil?.nombre || "No registrado"}</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 uppercase">Zona de Trabajo</label>
+                    <p className="text-base font-semibold text-black mt-1">{perfil?.zona || "Honduras"}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 uppercase">Teléfono</label>
+                    <p className="text-base font-semibold text-black mt-1">{perfil?.telefono || "No registrado"}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-gray-500 uppercase">Correo Electrónico</label>
+                  <p className="text-base font-semibold text-black mt-1">{perfil?.email}</p>
+                </div>
+              </div>
+
+              {/* Botón editar */}
+              <div className="mt-6 pt-6 border-t border-gray-100">
+                <button 
+                  onClick={() => navigate("/perfil-transportista")}
+                  className="w-full sm:w-auto px-6 py-3 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition-all"
+                >
+                  Editar Perfil
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Tarjetas laterales - 1 columna */}
           <div className="space-y-6">
-            <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-2xl shadow-slate-300">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">Verificación de Identidad</p>
-              <div className="flex items-center gap-5">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl ${perfil?.verificado ? 'bg-blue-600' : 'bg-orange-500 animate-pulse'}`}>
-                  {perfil?.verificado ? '✓' : '!'}
+            
+            {/* Verificación */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-start gap-3">
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${perfil?.verificado ? 'bg-black' : 'bg-gray-300'}`}>
+                  <span className="text-white text-xl">{perfil?.verificado ? '✓' : '!'}</span>
                 </div>
                 <div>
-                  <p className="text-xl font-black tracking-tighter">
-                    {perfil?.verificado ? 'VERIFICADO' : 'EN TRÁMITE'}
+                  <h3 className="font-bold text-black mb-1">
+                    {perfil?.verificado ? 'Cuenta Verificada' : 'En Revisión'}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {perfil?.verificado 
+                      ? 'Tu identidad ha sido verificada' 
+                      : 'Validando documentos...'}
                   </p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Socio Fletia HND</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-emerald-500 p-8 rounded-[2.5rem] text-white">
-              <p className="text-[10px] font-black text-emerald-200 uppercase tracking-widest mb-2">Estado de Cuenta</p>
-              <p className="text-2xl font-black uppercase">Activa</p>
+            {/* Estado de cuenta */}
+            <div className="bg-black rounded-xl shadow-sm p-6 text-white">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+                <span className="text-sm font-medium text-gray-300">Estado</span>
+              </div>
+              <p className="text-2xl font-bold">Cuenta Activa</p>
             </div>
+
+            {/* Soporte */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="font-bold text-black mb-3">¿Necesitas ayuda?</h3>
+              <button className="w-full py-2 text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-50 rounded-lg border border-gray-200 transition-all">
+                Contactar Soporte
+              </button>
+            </div>
+
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
