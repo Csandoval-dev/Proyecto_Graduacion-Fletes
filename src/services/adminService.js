@@ -7,7 +7,7 @@ import { functions } from "../firebase/firebase";
  */
 export const aprobarTransportista = async (transportistaId) => {
   try {
-    // Usamos la instancia centralizada 'functions'
+    // Usamos la instancia centralizada functions
     const aprobarFunction = httpsCallable(functions, "aprobarTransportista");
     const result = await aprobarFunction({ transportistaId });
     

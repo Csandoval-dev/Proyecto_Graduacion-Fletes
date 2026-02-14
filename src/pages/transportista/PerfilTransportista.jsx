@@ -180,7 +180,7 @@ function PerfilTransportista() {
     setError("");
 
     try {
-      // 1. Subir licencia a Cloudinary
+      //  Subir licencia a Cloudinary
       const licenciaResult = await subirArchivo(
         archivos.licencia,
         "documentos",
@@ -191,7 +191,7 @@ function PerfilTransportista() {
         throw new Error("Error al subir licencia");
       }
 
-      // 2. Subir tarjeta de circulación
+      //  Subir tarjeta de circulación
       const tarjetaResult = await subirArchivo(
         archivos.tarjetaCirculacion,
         "documentos",
@@ -202,7 +202,7 @@ function PerfilTransportista() {
         throw new Error("Error al subir tarjeta de circulación");
       }
 
-      // 3. Subir fotos del vehículo
+      //  Subir fotos del vehículo
       const fotosResult = await subirMultiplesArchivos(
         archivos.fotosVehiculo,
         "vehiculos",
@@ -213,7 +213,7 @@ function PerfilTransportista() {
         throw new Error("Error al subir fotos del vehículo");
       }
 
-      // 4. Crear documento en Firestore (colección transportistas)
+      //  Crear documento en Firestore (colección transportistas)
       await addDoc(collection(db, "transportistas"), {
         // Datos personales
         nombre: formData.nombre,
@@ -344,7 +344,7 @@ function PerfilTransportista() {
                   value={formData.nombre}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="Juan Pérez"
+                  placeholder="Ej : Pedro Lopez"
                   required
                 />
               </div>
@@ -371,7 +371,7 @@ function PerfilTransportista() {
                   value={formData.telefono}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="9999-9999"
+                  placeholder="0000-0000"
                   required
                 />
               </div>
@@ -397,7 +397,7 @@ function PerfilTransportista() {
                   onChange={handleChange}
                   rows="3"
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="Ej: Ofrezco servicios de mudanza, fletes express..."
+                  placeholder="Ej: Ofrezco servicios de mudanza, fletes.."
                 />
               </div>
 
@@ -411,7 +411,7 @@ function PerfilTransportista() {
             </div>
           )}
 
-          {/* STEP 2: Vehículo */}
+          {/*  Vehículo */}
           {step === 2 && (
             <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 space-y-4">
               <h2 className="text-lg font-semibold mb-4 border-b pb-2">Información del Vehículo</h2>
@@ -429,7 +429,7 @@ function PerfilTransportista() {
                   <option value="pickup">Pickup</option>
                   <option value="camion">Camión</option>
                   <option value="camioneta">Camioneta</option>
-                  <option value="moto">Moto (Mensajería)</option>
+                  <option value="moto">Moto </option>
                 </select>
               </div>
 
@@ -520,7 +520,7 @@ function PerfilTransportista() {
             </div>
           )}
 
-          {/* STEP 3: Documentos */}
+          {/*  Documentos */}
           {step === 3 && (
             <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 space-y-6">
               <h2 className="text-lg font-semibold mb-4 border-b pb-2">Documentos Requeridos</h2>
@@ -625,7 +625,7 @@ function PerfilTransportista() {
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>ℹ️ Importante:</strong> Tu solicitud será revisada por nuestro equipo. 
+                  <strong>ℹImportante:</strong> Tu solicitud será revisada por nuestro equipo. 
                   Una vez aprobada, recibirás un email con tus credenciales de acceso.
                 </p>
               </div>

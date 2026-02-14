@@ -1,9 +1,8 @@
-// src/pages/DashboardCliente/components/BuscarTransportistas.jsx
 import { useState, useEffect } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
 
-// ========== ICONOS ==========
+// ICONOS 
 const IconStar = ({ filled }) => (
   <svg className="w-4 h-4" fill={filled ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -58,7 +57,7 @@ function BuscarTransportistas({ usuario }) {
   const [filtroZona, setFiltroZona] = useState("todas");
   const [filtroVehiculo, setFiltroVehiculo] = useState("todos");
   const [filtroCalificacion, setFiltroCalificacion] = useState(0);
-  const [soloDisponibles, setSoloDisponibles] = useState(true);
+  const [soloDisponibles, setSoloDisponibles] = useState(false);
 
   useEffect(() => {
     cargarTransportistas();
@@ -72,7 +71,7 @@ function BuscarTransportistas({ usuario }) {
     try {
       setLoading(true);
       
-      // Query base - solo verificados
+      // Obtener transportistas verificados desde firestore
       const q = query(
         collection(db, "transportistas"),
         where("verificado", "==", true)
@@ -142,7 +141,7 @@ function BuscarTransportistas({ usuario }) {
   };
 
   const contactarTransportista = (transportista) => {
-    // Aquí irá la lógica para abrir el chat
+    // la lógica para abrir el chat aun en desarrollo
     alert(`Próximamente: Chat con ${transportista.nombre}`);
     cerrarPerfil();
   };
@@ -161,35 +160,7 @@ function BuscarTransportistas({ usuario }) {
   return (
     <div className="space-y-6">
       
-      {/* ========== HEADER ========== */}
-      <div>
-        <h1 className="text-3xl font-black text-slate-900">Buscar Transportistas</h1>
-        <p className="text-slate-600 mt-1">Encuentra al transportista perfecto para tu carga</p>
-      </div>
-
-      {/* ========== ESTADÍSTICAS RÁPIDAS ========== */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Transportistas</p>
-          <p className="text-3xl font-black text-slate-900 mt-1">{transportistas.length}</p>
-        </div>
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <p className="text-xs font-bold text-green-600 uppercase tracking-wider">Disponibles</p>
-          <p className="text-3xl font-black text-green-600 mt-1">
-            {transportistas.filter(t => t.disponible).length}
-          </p>
-        </div>
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Zonas</p>
-          <p className="text-3xl font-black text-blue-600 mt-1">{zonasUnicas.length}</p>
-        </div>
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <p className="text-xs font-bold text-purple-600 uppercase tracking-wider">Mostrando</p>
-          <p className="text-3xl font-black text-purple-600 mt-1">{transportistasFiltrados.length}</p>
-        </div>
-      </div>
-
-      {/* ========== FILTROS ========== */}
+      {/* FILTROS  */}
       <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
           <IconFilter />
@@ -204,7 +175,7 @@ function BuscarTransportistas({ usuario }) {
             </label>
             <input
               type="text"
-              placeholder="Ej: Juan Pérez"
+              placeholder="Ej: Roberto Gomez"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-sm"
@@ -277,7 +248,7 @@ function BuscarTransportistas({ usuario }) {
         </div>
       </div>
 
-      {/* ========== GRID DE TRANSPORTISTAS ========== */}
+      {/* GRID DE TRANSPORTISTAS  */}
       {transportistasFiltrados.length === 0 ? (
         <div className="bg-white p-12 rounded-xl border border-slate-200 text-center">
           <div className="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -301,7 +272,7 @@ function BuscarTransportistas({ usuario }) {
                       {transportista.nombre}
                     </h3>
                     <p className="text-sm text-slate-600 flex items-center gap-1">
-                      📍 {transportista.zona}
+                       {transportista.zona}
                     </p>
                   </div>
                   
@@ -335,9 +306,18 @@ function BuscarTransportistas({ usuario }) {
               {/* Info del vehículo */}
               <div className="p-5 bg-slate-50">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="bg-white p-2 rounded-lg">
-                    <IconTruck />
-                  </div>
+                  {/* Foto del vehículo o Icono */}
+                  <div className="bg-white w-12 h-12 rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
+           {transportista.vehiculo?.fotos && transportista.vehiculo.fotos.length > 0 ? (
+         <img 
+      src={transportista.vehiculo.fotos[0]} 
+      alt="Vehículo" 
+      className="w-full h-full object-cover"
+          />
+              ) : (
+         <IconTruck />
+                   )}
+                      </div>
                   <div>
                     <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Vehículo</p>
                     <p className="text-sm font-bold text-slate-900">
@@ -386,7 +366,7 @@ function BuscarTransportistas({ usuario }) {
         </div>
       )}
 
-      {/* ========== MODAL PERFIL DETALLADO ========== */}
+      {/* MODAL PERFIL DETALLADO  */}
       {selectedTransportista && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
@@ -398,7 +378,7 @@ function BuscarTransportistas({ usuario }) {
                   {selectedTransportista.nombre}
                 </h2>
                 <p className="text-slate-600 flex items-center gap-2 mt-1">
-                  📍 {selectedTransportista.zona}
+                   {selectedTransportista.zona}
                 </p>
               </div>
               <button
@@ -440,6 +420,17 @@ function BuscarTransportistas({ usuario }) {
                 </p>
               </div>
 
+              {/* Foto Principal del Vehículo */}
+              {selectedTransportista.vehiculo?.fotoURL && (
+                <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                  <img 
+                    src={selectedTransportista.vehiculo.fotoURL} 
+                    alt="Vehículo" 
+                    className="w-full h-72 object-cover"
+                  />
+                </div>
+              )}
+
               {/* Descripción */}
               {selectedTransportista.descripcion && (
                 <div>
@@ -452,9 +443,9 @@ function BuscarTransportistas({ usuario }) {
 
               {/* Información del vehículo */}
               <div>
-                <h3 className="font-bold text-slate-900 mb-4">Información del Vehículo</h3>
-                <div className="bg-slate-50 rounded-xl p-5">
-                  <div className="grid grid-cols-2 gap-4">
+                <h3 className="font-bold text-slate-900 mb-4">Detalles del Vehículo</h3>
+                <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div>
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Tipo</p>
                       <p className="text-sm font-bold text-slate-900">
@@ -495,18 +486,11 @@ function BuscarTransportistas({ usuario }) {
                 </div>
               </div>
 
-              {/* Información de contacto */}
+              {/* Información de contacto  */}
               <div>
                 <h3 className="font-bold text-slate-900 mb-4">Información de Contacto</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                    <IconPhone />
-                    <div>
-                      <p className="text-xs text-slate-500 font-medium">Teléfono</p>
-                      <p className="font-bold text-slate-900">{selectedTransportista.telefono}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <IconMail />
                     <div>
                       <p className="text-xs text-slate-500 font-medium">Email</p>
@@ -523,8 +507,8 @@ function BuscarTransportistas({ usuario }) {
                 disabled={!selectedTransportista.disponible}
               >
                 {selectedTransportista.disponible 
-                  ? "💬 Iniciar Conversación" 
-                  : "❌ No disponible actualmente"}
+                  ? "Iniciar Conversación" 
+                  : "No disponible actualmente"}
               </button>
             </div>
           </div>

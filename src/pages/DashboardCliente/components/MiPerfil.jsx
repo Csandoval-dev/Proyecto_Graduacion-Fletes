@@ -53,14 +53,14 @@ function MiPerfil({ usuario }) {
         telefono: datosEditados.telefono
       });
 
-      alert("✅ Perfil actualizado correctamente");
+      alert(" Perfil actualizado correctamente");
       setEditando(false);
       
       // Recargar página para actualizar datos en toda la UI
       window.location.reload();
     } catch (error) {
       console.error("Error al actualizar perfil:", error);
-      alert("❌ Error al guardar cambios");
+      alert("Error al guardar cambios");
     } finally {
       setGuardando(false);
     }
@@ -76,12 +76,6 @@ function MiPerfil({ usuario }) {
 
   return (
     <div className="space-y-6">
-      
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-black text-slate-900">Mi Perfil</h1>
-        <p className="text-slate-600 mt-1">Administra tu información personal</p>
-      </div>
 
       {/* Tarjeta principal de perfil */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -96,7 +90,7 @@ function MiPerfil({ usuario }) {
               <h2 className="text-2xl font-black">{usuario?.nombre}</h2>
               <p className="text-white/80 flex items-center gap-2 mt-1">
                 <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                Cliente Activo
+                Usuario Activo
               </p>
             </div>
           </div>
@@ -143,29 +137,6 @@ function MiPerfil({ usuario }) {
                 </div>
               </div>
 
-              {/* Teléfono */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">
-                  Teléfono
-                </label>
-                {editando ? (
-                  <input
-                    type="tel"
-                    name="telefono"
-                    value={datosEditados.telefono}
-                    onChange={handleChange}
-                    placeholder="Ej: +504 1234-5678"
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                  />
-                ) : (
-                  <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-lg">
-                    <IconPhone />
-                    <p className="font-bold text-slate-900">
-                      {usuario?.telefono || "No registrado"}
-                    </p>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
@@ -208,7 +179,7 @@ function MiPerfil({ usuario }) {
                   disabled={guardando}
                   className="flex-1 px-6 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {guardando ? "Guardando..." : "💾 Guardar Cambios"}
+                  {guardando ? "Guardando..." : "Guardar Cambios"}
                 </button>
                 <button
                   onClick={handleCancelar}
@@ -223,7 +194,7 @@ function MiPerfil({ usuario }) {
                 onClick={() => setEditando(true)}
                 className="flex-1 px-6 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all"
               >
-                ✏️ Editar Perfil
+                 Editar Perfil
               </button>
             )}
           </div>
@@ -232,7 +203,7 @@ function MiPerfil({ usuario }) {
 
       {/* Información adicional */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
-        <h3 className="font-bold text-yellow-900 mb-2">🔒 Seguridad de tu cuenta</h3>
+        <h3 className="font-bold text-yellow-900 mb-2"> Seguridad de tu cuenta</h3>
         <p className="text-sm text-yellow-800">
           Tu información está protegida. Solo tú puedes ver y editar tus datos personales.
         </p>

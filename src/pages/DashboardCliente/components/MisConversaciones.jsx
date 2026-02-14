@@ -90,12 +90,6 @@ function MisConversaciones({ usuario }) {
 
   return (
     <div className="space-y-6">
-      
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-black text-slate-900">Mis Conversaciones</h1>
-        <p className="text-slate-600 mt-1">Tus chats con transportistas</p>
-      </div>
 
       {/* Lista de conversaciones */}
       {conversaciones.length === 0 ? (

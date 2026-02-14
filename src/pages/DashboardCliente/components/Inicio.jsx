@@ -90,94 +90,47 @@ function Inicio({ usuario }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       
-      {/* Header de bienvenida */}
-      <div>
-        <h1 className="text-3xl font-black text-slate-900">
-          ¡Hola, {usuario?.nombre?.split(' ')[0] || 'Cliente'}! 👋
+      {/* Header de bienvenida  */}
+      <div className="mb-2">
+        <h1 className="text-3xl md:text-4xl font-black text-slate-900 mb-2">
+          ¡Hola, {usuario?.nombre?.split(' ')[0] || 'Cliente'}! 
         </h1>
-        <p className="text-slate-600 mt-1">
+        <p className="text-slate-600 text-base">
           Bienvenido de nuevo a tu panel de control
         </p>
       </div>
 
-      {/* Tarjetas de estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-shadow">
-          <div className="flex items-center gap-4">
-            <div className="bg-blue-100 text-blue-600 p-4 rounded-xl">
-              <IconClock />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Solicitudes Activas
-              </p>
-              <p className="text-3xl font-black text-slate-900 mt-1">
-                {stats.solicitudesActivas}
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* Tarjetas de estadísticas - Mejoradas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-shadow">
-          <div className="flex items-center gap-4">
-            <div className="bg-green-100 text-green-600 p-4 rounded-xl">
-              <IconCheck />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Servicios Completados
-              </p>
-              <p className="text-3xl font-black text-slate-900 mt-1">
-                {stats.solicitudesCompletadas}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-shadow">
-          <div className="flex items-center gap-4">
-            <div className="bg-purple-100 text-purple-600 p-4 rounded-xl">
-              <IconChat />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Conversaciones
-              </p>
-              <p className="text-3xl font-black text-slate-900 mt-1">
-                {stats.conversacionesActivas}
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Accesos rápidos */}
+      {/* Accesos rápidos - Mejorados */}
       <div>
-        <h2 className="text-xl font-bold text-slate-900 mb-4">Accesos Rápidos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h2 className="text-xl font-bold text-slate-900 mb-5">Accesos Rápidos</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           
-          <div className="bg-gradient-to-br from-black to-gray-800 p-6 rounded-2xl text-white shadow-lg hover:shadow-xl transition-all cursor-pointer">
+          <div className="bg-gradient-to-br from-black to-gray-800 p-6 rounded-xl text-white shadow-md hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer group">
             <div className="flex items-center gap-4">
-              <div className="bg-white/20 p-3 rounded-xl">
+              <div className="bg-white/20 p-3 rounded-lg group-hover:bg-white/30 transition-colors flex-shrink-0">
                 <IconTruck />
               </div>
-              <div>
-                <h3 className="font-bold text-lg">Buscar Transportista</h3>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-lg mb-1">Buscar Transportista</h3>
                 <p className="text-sm text-white/80">Encuentra el ideal para tu carga</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white border-2 border-slate-200 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-all cursor-pointer">
+          <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-md hover:shadow-xl hover:scale-[1.02] hover:border-slate-300 transition-all cursor-pointer group">
             <div className="flex items-center gap-4">
-              <div className="bg-slate-100 p-3 rounded-xl text-slate-700">
+              <div className="bg-slate-100 p-3 rounded-lg text-slate-700 group-hover:bg-slate-200 transition-colors flex-shrink-0">
                 <IconChat />
               </div>
-              <div>
-                <h3 className="font-bold text-lg text-slate-900">Mis Conversaciones</h3>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-lg text-slate-900 mb-1">Mis Conversaciones</h3>
                 <p className="text-sm text-slate-600">Ver chats activos</p>
               </div>
             </div>
@@ -185,15 +138,20 @@ function Inicio({ usuario }) {
         </div>
       </div>
 
-      {/* Información adicional */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-        <h3 className="font-bold text-blue-900 mb-2">💡 ¿Necesitas ayuda?</h3>
-        <p className="text-sm text-blue-800 mb-4">
-          Estamos aquí para ayudarte. Si tienes alguna pregunta o problema, no dudes en contactarnos.
-        </p>
-        <button className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors text-sm">
-          Contactar Soporte
-        </button>
+      {/* Información adicional - Mejorada */}
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200 rounded-xl p-6">
+        <div className="flex items-start gap-4">
+          <div className="text-3xl flex-shrink-0">💡</div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-blue-900 mb-2 text-lg">¿Necesitas ayuda?</h3>
+            <p className="text-sm text-blue-800 mb-4 leading-relaxed">
+              Estamos aquí para ayudarte. Si tienes alguna pregunta o problema, no dudes en contactarnos.
+            </p>
+            <button className="px-5 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 active:scale-95 transition-all text-sm shadow-sm">
+              Contactar Soporte
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

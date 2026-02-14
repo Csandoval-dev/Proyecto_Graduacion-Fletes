@@ -78,12 +78,12 @@ function AprobarTransportistas() {
       const resultado = await aprobarTransportistaFunction(transportistaId);
       
       if (resultado.success) {
-        alert("✅ Transportista aprobado exitosamente. Se ha enviado un email con las credenciales.");
+        alert(" Transportista aprobado exitosamente. Se ha enviado un email con las credenciales.");
         // Recargar lista
         cargarTransportistasPendientes();
         setShowModal(false);
       } else {
-        alert(`❌ Error: ${resultado.error}`);
+        alert(` Error: ${resultado.error}`);
       }
     } catch (error) {
       console.error("Error al aprobar transportista:", error);
@@ -104,11 +104,11 @@ function AprobarTransportistas() {
       const resultado = await rechazarTransportistaFunction(transportistaId, motivo);
       
       if (resultado.success) {
-        alert("✅ Solicitud rechazada");
+        alert(" Solicitud rechazada");
         cargarTransportistasPendientes();
         setShowModal(false);
       } else {
-        alert(`❌ Error: ${resultado.error}`);
+        alert(` Error: ${resultado.error}`);
       }
     } catch (error) {
       console.error("Error al rechazar:", error);

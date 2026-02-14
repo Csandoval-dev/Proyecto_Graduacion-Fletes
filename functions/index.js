@@ -35,7 +35,7 @@ exports.aprobarTransportista = onCall(
       const { email, nombre, telefono } = doc.data();
       const passwordTemporal = Math.random().toString(36).slice(-10);
 
-      // 1. Crear/Actualizar usuario en Firebase Authentication
+      //  Crear/Actualizar usuario en Firebase Authentication
       let userRecord;
       try {
         userRecord = await admin.auth().createUser({
@@ -52,10 +52,10 @@ exports.aprobarTransportista = onCall(
         }
       }
 
-      // 2. Asignar rol en Custom Claims (Seguridad de Token)
+      //  Asignar rol en a firebase auth
       await admin.auth().setCustomUserClaims(userRecord.uid, { role: "transportista" });
 
-      // 3. ACTUALIZACIÓN EN COLECCIÓN 'TRANSPORTISTAS'
+      //  ACTUALIZACIÓN EN COLECCIÓN 'TRANSPORTISTAS'
       await transportistaRef.update({
         verificado: true,
         usuarioId: userRecord.uid,
@@ -64,8 +64,7 @@ exports.aprobarTransportista = onCall(
         estadoVerificacion: "aprobado",
       });
 
-      // 4. NUEVO: CREAR/ACTUALIZAR EN COLECCIÓN 'USUARIOS' (Para el Login y Gestión)
-      // Esto es lo que evita que el login falle por no encontrar el documento
+      // Sincroniza datos con la coleccion usuarios para facilitar consultas y gestion de perfiles
       await admin.firestore().collection("usuarios").doc(userRecord.uid).set({
         uid: userRecord.uid,
         nombre: nombre,
@@ -74,9 +73,8 @@ exports.aprobarTransportista = onCall(
         rol: "transportista",
         activo: true,
         createdAt: admin.firestore.FieldValue.serverTimestamp()
-      }, { merge: true }); // 'merge' evita borrar datos si el usuario ya existía
-
-      // 5. ENVÍO DE CORREO
+      }, { merge: true }); 
+      //  ENVÍO DE CORREO
       try {
         const transporter = nodemailer.createTransport({
           service: "gmail",
