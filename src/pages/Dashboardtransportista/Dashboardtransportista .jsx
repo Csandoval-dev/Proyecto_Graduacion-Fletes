@@ -15,7 +15,7 @@ function DashboardTransportista() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          // Lógica de búsqueda (Directo -> Email -> Usuarios)
+          // Lógica de búsqueda 
           const directRef = doc(db, "transportistas", user.uid);
           const directSnap = await getDoc(directRef);
 

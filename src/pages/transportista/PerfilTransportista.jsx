@@ -63,7 +63,7 @@ function PerfilTransportista() {
     
     if (!file) return;
 
-    // Validar tipo de archivo (solo imágenes y PDFs)
+    // Validar tipo de archivo 
     const tiposPermitidos = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
     if (!validarTipoArchivo(file, tiposPermitidos)) {
       setError("Solo se permiten archivos JPG, PNG o PDF");
@@ -561,7 +561,7 @@ function PerfilTransportista() {
               {/* Tarjeta de Circulación */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tarjeta de Circulación * <span className="text-xs text-gray-500">(JPG, PNG o PDF - Max 5MB)</span>
+                  Tarjeta de identidad DNI* <span className="text-xs text-gray-500">(JPG, PNG o PDF - Max 5MB)</span>
                 </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
                   <input
