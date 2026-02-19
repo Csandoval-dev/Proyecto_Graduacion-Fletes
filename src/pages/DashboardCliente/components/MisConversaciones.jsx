@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
+import Chat from "./Chat";
 
 const IconChat = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,6 +19,7 @@ const IconUser = () => (
 function MisConversaciones({ usuario }) {
   const [conversaciones, setConversaciones] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [chatAbierto, setChatAbierto] = useState(null);
 
   useEffect(() => {
     if (usuario?.uid) {
@@ -56,7 +58,7 @@ function MisConversaciones({ usuario }) {
   };
 
   const abrirChat = (conversacion) => {
-    alert(`Próximamente: Chat con ${conversacion.nombreTransportista}`);
+    setChatAbierto(conversacion.id);
   };
 
   const formatearFecha = (timestamp) => {
@@ -90,6 +92,12 @@ function MisConversaciones({ usuario }) {
 
   return (
     <div className="space-y-6">
+      
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-black text-slate-900">Mis Conversaciones</h1>
+        <p className="text-slate-600 mt-1">Tus chats con transportistas</p>
+      </div>
 
       {/* Lista de conversaciones */}
       {conversaciones.length === 0 ? (
@@ -136,6 +144,15 @@ function MisConversaciones({ usuario }) {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Chat Modal */}
+      {chatAbierto && (
+        <Chat
+          conversacionId={chatAbierto}
+          usuario={usuario}
+          onClose={() => setChatAbierto(null)}
+        />
       )}
     </div>
   );
