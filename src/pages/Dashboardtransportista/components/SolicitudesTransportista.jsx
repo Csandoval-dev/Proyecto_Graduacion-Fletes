@@ -73,11 +73,11 @@ function SolicitudesTransportista({ usuario }) {
       await updateDoc(doc(db, 'solicitudes', solicitudId), {
         estado: 'asignada'
       });
-      alert('✅ Solicitud aceptada');
+      alert(' Servicio asignado');
       cargarSolicitudes();
     } catch (error) {
       console.error('Error:', error);
-      alert('❌ Error al aceptar solicitud');
+      alert(' Error al aceptar solicitud');
     }
   };
 
@@ -88,11 +88,11 @@ function SolicitudesTransportista({ usuario }) {
       await updateDoc(doc(db, 'solicitudes', solicitudId), {
         estado: 'en_proceso'
       });
-      alert('✅ Servicio iniciado');
+      alert(' Servicio iniciado');
       cargarSolicitudes();
     } catch (error) {
       console.error('Error:', error);
-      alert('❌ Error al iniciar servicio');
+      alert(' Error al iniciar servicio');
     }
   };
 
@@ -103,11 +103,11 @@ function SolicitudesTransportista({ usuario }) {
       await updateDoc(doc(db, 'solicitudes', solicitudId), {
         estado: 'finalizado'
       });
-      alert('✅ Servicio finalizado');
+      alert(' Servicio finalizado');
       cargarSolicitudes();
     } catch (error) {
       console.error('Error:', error);
-      alert('❌ Error al finalizar servicio');
+      alert(' Error al finalizar servicio');
     }
   };
 
@@ -138,7 +138,7 @@ function SolicitudesTransportista({ usuario }) {
     <div className="space-y-6">
       
       <div>
-        <h1 className="text-3xl font-black text-slate-900">Mis Solicitudes</h1>
+        <h1 className="text-3xl font-black text-slate-900"></h1>
         <p className="text-slate-600 mt-1">Gestiona las solicitudes de flete</p>
       </div>
 
@@ -210,7 +210,7 @@ function SolicitudesTransportista({ usuario }) {
                     onClick={() => abrirChat(sol)}
                     className="flex-1 px-4 py-2 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition-all"
                   >
-                    💬 Chat
+                     Chat
                   </button>
 
                   {sol.estado === 'pendiente' && (
@@ -218,7 +218,7 @@ function SolicitudesTransportista({ usuario }) {
                       onClick={() => aceptarSolicitud(sol.id)}
                       className="flex-1 px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-all"
                     >
-                      ✓ Aceptar
+                       Aceptar
                     </button>
                   )}
 
@@ -227,7 +227,7 @@ function SolicitudesTransportista({ usuario }) {
                       onClick={() => iniciarServicio(sol.id)}
                       className="flex-1 px-4 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-all"
                     >
-                      🚀 Iniciar
+                       Iniciar
                     </button>
                   )}
 
@@ -236,7 +236,7 @@ function SolicitudesTransportista({ usuario }) {
                       onClick={() => finalizarServicio(sol.id)}
                       className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-all"
                     >
-                      ✓ Finalizar
+                       Finalizar
                     </button>
                   )}
                 </div>

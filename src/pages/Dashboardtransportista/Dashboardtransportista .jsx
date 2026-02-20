@@ -96,7 +96,7 @@ function DashboardTransportista() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-600 border-t-transparent mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-black-600 border-t-transparent mx-auto mb-4"></div>
           <p className="text-slate-700 font-bold text-lg">Cargando...</p>
         </div>
       </div>
@@ -123,7 +123,7 @@ function DashboardTransportista() {
       >
         <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                 <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05a2.5 2.5 0 014.9 0H18a1 1 0 001-1V8a1 1 0 00-1-1h-4z" />
@@ -228,7 +228,7 @@ function VistaInicio({ perfil }) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-black text-slate-900">¡Hola, {perfil?.nombre?.split(' ')[0]}! 👋</h1>
+        <h1 className="text-3xl font-black text-slate-900">¡Hola, {perfil?.nombre?.split(' ')[0]}! </h1>
         <p className="text-slate-600 mt-1">Bienvenido a tu panel de transportista</p>
       </div>
 

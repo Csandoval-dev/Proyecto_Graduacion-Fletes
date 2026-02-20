@@ -215,9 +215,9 @@ function Chat({ conversacionId, usuario, onClose }) {
                         : 'bg-white border border-slate-200 text-slate-900 rounded-bl-none'
                     }`}>
                       {!esMio && (
-                        <p className="text-xs font-bold mb-1 opacity-70">
-                          {msg.nombreEmisor}
-                        </p>
+                        <p className="text-xs font-bold mb-1 text-blue-600">
+                    {msg.nombreEmisor || solicitud?.nombreTransportista || "Transportista"}
+                   </p>
                       )}
                       <p className="text-sm leading-relaxed break-words">
                         {msg.contenido}

@@ -61,7 +61,7 @@ function BuscarTransportistas({ usuario }) {
   const [filtroZona, setFiltroZona] = useState("todas");
   const [filtroVehiculo, setFiltroVehiculo] = useState("todos");
   const [filtroCalificacion, setFiltroCalificacion] = useState(0);
-  const [soloDisponibles, setSoloDisponibles] = useState(true);
+  const [soloDisponibles, setSoloDisponibles] = useState(false);
 
   useEffect(() => {
     cargarTransportistas();
@@ -151,7 +151,7 @@ function BuscarTransportistas({ usuario }) {
   };
 
   const handleSolicitudSuccess = (solicitudId) => {
-    alert('✅ Solicitud creada exitosamente. ¡Puedes chatear con el transportista en "Mis Conversaciones"!');
+    alert(' Solicitud creada exitosamente. ¡Puedes chatear con el transportista en "Mis Conversaciones"!');
     // Opcional: Redirigir a Mis Conversaciones
   };
 
@@ -171,7 +171,7 @@ function BuscarTransportistas({ usuario }) {
       
       {/* ========== HEADER ========== */}
       <div>
-        <h1 className="text-3xl font-black text-slate-900">Buscar Transportistas</h1>
+        <h1 className="text-3xl font-black text-slate-900"></h1>
         <p className="text-slate-600 mt-1">Encuentra al transportista perfecto para tu carga</p>
       </div>
 

@@ -95,7 +95,7 @@ function MisConversaciones({ usuario }) {
       
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-black text-slate-900">Mis Conversaciones</h1>
+        <h1 className="text-3xl font-black text-slate-900"></h1>  
         <p className="text-slate-600 mt-1">Tus chats con transportistas</p>
       </div>
 

@@ -117,7 +117,7 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
       scrollToBottom();
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
-      alert('❌ Error al enviar mensaje');
+      alert(' Error al enviar mensaje');
     } finally {
       setEnviando(false);
     }
@@ -137,7 +137,7 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
     return (
       <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl p-8 max-w-md text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-4 border-orange-500 border-t-transparent mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-4 border-black border-t-transparent mx-auto mb-4"></div>
           <p className="text-slate-700 font-medium">Sincronizando chat...</p>
         </div>
       </div>
@@ -149,9 +149,9 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
       <div className="bg-white rounded-2xl max-w-4xl w-full h-[90vh] flex flex-col shadow-2xl">
         
         {/* Header con estilo de transportista */}
-        <div className="bg-orange-600 text-white p-4 rounded-t-2xl flex items-center justify-between">
+        <div className="bg-amber-700 text-white p-4 rounded-t-2xl flex items-center justify-between">
           <div>
-            <h3 className="font-bold text-lg">{solicitud.nombreUsuario} (Cliente)</h3>
+            <h3 className="font-bold text-lg">Cliente :{solicitud.nombreUsuario} </h3>
             <p className="text-sm text-orange-100 italic">
               Solicitud: {solicitud.descripcionCarga.substring(0, 40)}...
             </p>
@@ -168,15 +168,15 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
         <div className="bg-orange-50 border-b border-orange-200 p-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
-              <p className="text-xs font-bold text-orange-700 uppercase">📍 Origen</p>
+              <p className="text-xs font-bold text-orange-700 uppercase"> Origen</p>
               <p className="text-slate-900 font-medium truncate">{solicitud.origen?.direccion}</p>
             </div>
             <div>
-              <p className="text-xs font-bold text-orange-700 uppercase">🏁 Destino</p>
+              <p className="text-xs font-bold text-orange-700 uppercase"> Destino</p>
               <p className="text-slate-900 font-medium truncate">{solicitud.destino?.direccion}</p>
             </div>
             <div>
-              <p className="text-xs font-bold text-orange-700 uppercase">📏 Distancia</p>
+              <p className="text-xs font-bold text-orange-700 uppercase"> Distancia</p>
               <p className="text-slate-900 font-medium">{solicitud.distanciaKm} km</p>
             </div>
             <div>
