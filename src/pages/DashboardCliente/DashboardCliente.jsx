@@ -4,6 +4,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../../firebase/firebase";
 import { cerrarSesion } from "../../services/authService";
+import MisFletes from "./components/MisFletes";
 
 // Importar componentes
 import Inicio from "./components/Inicio";
@@ -17,7 +18,12 @@ const IconHome = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
   </svg>
 );
-
+const IconTruck = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+    <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05a2.5 2.5 0 014.9 0H18a1 1 0 001-1V8a1 1 0 00-1-1h-4z" />
+  </svg>
+);
 const IconSearch = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -126,6 +132,7 @@ function DashboardCliente() {
     { id: "inicio", label: "Inicio", icon: <IconHome /> },
     { id: "buscar", label: "Buscar Transportistas", icon: <IconSearch /> },
     { id: "conversaciones", label: "Mis Conversaciones", icon: <IconChat /> },
+    { id: "fletes", label: "Mis Fletes", icon: <IconTruck /> },
     { id: "perfil", label: "Mi Perfil", icon: <IconUser /> }
   ];
 
@@ -259,6 +266,7 @@ function DashboardCliente() {
               {/* Renderizar componente según pestaña activa */}
               {activeTab === "inicio" && <Inicio usuario={usuario} />}
               {activeTab === "buscar" && <BuscarTransportistas usuario={usuario} />}
+              {activeTab === "fletes" && <MisFletes usuario={usuario}/>}
               {activeTab === "conversaciones" && <MisConversaciones usuario={usuario} />}
               {activeTab === "perfil" && <MiPerfil usuario={usuario} />}
               

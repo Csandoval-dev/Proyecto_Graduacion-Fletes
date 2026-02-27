@@ -37,19 +37,35 @@ function MisConversaciones({ usuario }) {
       );
       
       const snapshot = await getDocs(q);
-      const lista = snapshot.docs.map(doc => ({
+      let lista = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
 
-      // Ordenar por fecha más reciente
+      //  Ordenar primero por fecha (más reciente arriba)
       lista.sort((a, b) => {
         const dateA = a.ultimoMensajeTimestamp?.toDate() || new Date(0);
         const dateB = b.ultimoMensajeTimestamp?.toDate() || new Date(0);
         return dateB - dateA;
       });
 
-      setConversaciones(lista);
+      //  FILTRADO: Solo una conversación por fletero
+      const conversasionesUnicas = [];
+      const idsFleterosVistos = new Set();
+
+      lista.forEach(conv => {
+        // Buscamos el ID del fletero (el que NO es el usuario actual)
+        const fleteroId = conv.participantes.find(id => id !== usuario.uid);
+
+        // Si no hemos agregado a este fletero todavía, lo agregamos
+        // Como la lista ya está ordenada por fecha, se quedará el más reciente
+        if (fleteroId && !idsFleterosVistos.has(fleteroId)) {
+          idsFleterosVistos.add(fleteroId);
+          conversasionesUnicas.push(conv);
+        }
+      });
+
+      setConversaciones(conversasionesUnicas);
     } catch (error) {
       console.error("Error al cargar conversaciones:", error);
     } finally {

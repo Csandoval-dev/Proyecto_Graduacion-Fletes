@@ -1,32 +1,23 @@
 // src/pages/Dashboardtransportista/components/SolicitudesTransportista.jsx
 import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, orderBy, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../firebase/firebase';
 import ChatTransportista from './ChatTransportista';
+import MapaRuta from '../../../components/MapaRuta';
+import { ESTADOS_FLETE, getEstadoInfo } from '../../../constants/estadosFlete';
 
-const IconClock = () => (
+const IconClipboard = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const IconCheck = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-  </svg>
-);
-
-const IconX = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
   </svg>
 );
 
 function SolicitudesTransportista({ usuario }) {
   const [solicitudes, setSolicitudes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filtro, setFiltro] = useState('pendiente'); // pendiente, asignada, todas
+  const [filtro, setFiltro] = useState('pendiente');
   const [chatAbierto, setChatAbierto] = useState(null);
+  const [detalleAbierto, setDetalleAbierto] = useState(null);
 
   useEffect(() => {
     cargarSolicitudes();
@@ -66,48 +57,27 @@ function SolicitudesTransportista({ usuario }) {
     }
   };
 
-  const aceptarSolicitud = async (solicitudId) => {
-    if (!confirm('¿Aceptar esta solicitud?')) return;
+  const cambiarEstado = async (solicitudId, nuevoEstado) => {
+    const estadoInfo = getEstadoInfo(nuevoEstado);
+    
+    if (!confirm(`¿${estadoInfo.accionTransportista}?`)) return;
     
     try {
       await updateDoc(doc(db, 'solicitudes', solicitudId), {
-        estado: 'asignada'
+        estado: nuevoEstado,
+        historial: arrayUnion({
+          estado: nuevoEstado,
+          fecha: new Date(),
+          descripcion: estadoInfo.descripcion
+        })
       });
-      alert(' Servicio asignado');
+      
+      alert(` Estado actualizado a: ${estadoInfo.label}`);
+      setDetalleAbierto(null);
       cargarSolicitudes();
     } catch (error) {
       console.error('Error:', error);
-      alert(' Error al aceptar solicitud');
-    }
-  };
-
-  const iniciarServicio = async (solicitudId) => {
-    if (!confirm('¿Iniciar el servicio?')) return;
-    
-    try {
-      await updateDoc(doc(db, 'solicitudes', solicitudId), {
-        estado: 'en_proceso'
-      });
-      alert(' Servicio iniciado');
-      cargarSolicitudes();
-    } catch (error) {
-      console.error('Error:', error);
-      alert(' Error al iniciar servicio');
-    }
-  };
-
-  const finalizarServicio = async (solicitudId) => {
-    if (!confirm('¿Finalizar el servicio?')) return;
-    
-    try {
-      await updateDoc(doc(db, 'solicitudes', solicitudId), {
-        estado: 'finalizado'
-      });
-      alert(' Servicio finalizado');
-      cargarSolicitudes();
-    } catch (error) {
-      console.error('Error:', error);
-      alert(' Error al finalizar servicio');
+      alert(' Error al cambiar estado');
     }
   };
 
@@ -115,15 +85,8 @@ function SolicitudesTransportista({ usuario }) {
     setChatAbierto(solicitud);
   };
 
-  const getBadgeEstado = (estado) => {
-    const badges = {
-      pendiente: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      asignada: 'bg-blue-100 text-blue-700 border-blue-200',
-      en_proceso: 'bg-purple-100 text-purple-700 border-purple-200',
-      finalizado: 'bg-green-100 text-green-700 border-green-200',
-      cancelado: 'bg-red-100 text-red-700 border-red-200'
-    };
-    return badges[estado] || badges.pendiente;
+  const verDetalle = (solicitud) => {
+    setDetalleAbierto(solicitud);
   };
 
   if (loading) {
@@ -138,23 +101,22 @@ function SolicitudesTransportista({ usuario }) {
     <div className="space-y-6">
       
       <div>
-        <h1 className="text-3xl font-black text-slate-900"></h1>
         <p className="text-slate-600 mt-1">Gestiona las solicitudes de flete</p>
       </div>
 
       {/* Filtros */}
       <div className="flex gap-2 flex-wrap">
-        {['pendiente', 'asignada', 'en_proceso', 'finalizado', 'todas'].map((f) => (
+        {['pendiente', 'aceptada', 'en_camino', 'recogido', 'entregado', 'finalizado', 'todas'].map((f) => (
           <button
             key={f}
             onClick={() => setFiltro(f)}
             className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
               filtro === f
-                ? 'bg-black text-white'
+                ? 'bg-orange-600 text-white'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            {f === 'todas' ? 'Todas' : f.replace('_', ' ')}
+            {f === 'todas' ? 'Todas' : getEstadoInfo(f).label}
           </button>
         ))}
       </div>
@@ -162,87 +124,63 @@ function SolicitudesTransportista({ usuario }) {
       {/* Lista de solicitudes */}
       {solicitudes.length === 0 ? (
         <div className="bg-white p-12 rounded-xl border border-slate-200 text-center">
-          <p className="text-slate-600">No hay solicitudes {filtro !== 'todas' ? filtro : ''}</p>
+          <p className="text-slate-600">No hay solicitudes {filtro !== 'todas' ? getEstadoInfo(filtro).label.toLowerCase() : ''}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {solicitudes.map((sol) => (
-            <div key={sol.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-bold text-slate-900">
-                        {sol.nombreUsuario}
-                      </h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getBadgeEstado(sol.estado)}`}>
-                        {sol.estado}
-                      </span>
+          {solicitudes.map((sol) => {
+            const estadoInfo = getEstadoInfo(sol.estado);
+            
+            return (
+              <div key={sol.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-bold text-slate-900">
+                          {sol.nombreUsuario}
+                        </h3>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${estadoInfo.bgColor} ${estadoInfo.textColor} ${estadoInfo.borderColor}`}>
+                          {estadoInfo.icono} {estadoInfo.label}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-600 line-clamp-1">{sol.descripcionCarga}</p>
                     </div>
-                    <p className="text-sm text-slate-600">{sol.descripcionCarga}</p>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Origen</p>
-                    <p className="text-sm text-slate-900">{sol.origen?.direccion}</p>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-xs font-bold text-slate-500 uppercase mb-1">Distancia</p>
+                      <p className="text-sm text-slate-900">{sol.distanciaKm} km</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-500 uppercase mb-1">Fecha</p>
+                      <p className="text-sm text-slate-900">
+                        {sol.fechaSolicitada?.toDate?.()?.toLocaleDateString('es-HN')}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Destino</p>
-                    <p className="text-sm text-slate-900">{sol.destino?.direccion}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Distancia</p>
-                    <p className="text-sm text-slate-900">{sol.distanciaKm} km</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Fecha</p>
-                    <p className="text-sm text-slate-900">
-                      {sol.fechaSolicitada?.toDate?.()?.toLocaleDateString('es-HN')}
-                    </p>
-                  </div>
-                </div>
 
-                {/* Botones de acción */}
-                <div className="flex gap-2 pt-4 border-t">
-                  <button
-                    onClick={() => abrirChat(sol)}
-                    className="flex-1 px-4 py-2 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition-all"
-                  >
-                     Chat
-                  </button>
-
-                  {sol.estado === 'pendiente' && (
+                  {/* Botones de acción */}
+                  <div className="flex gap-2 pt-4 border-t">
                     <button
-                      onClick={() => aceptarSolicitud(sol.id)}
-                      className="flex-1 px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-all"
+                      onClick={() => verDetalle(sol)}
+                      className="flex-1 px-4 py-2 bg-slate-100 text-slate-900 font-bold rounded-lg hover:bg-slate-200 transition-all"
                     >
-                       Aceptar
+                       Ver Detalle
                     </button>
-                  )}
-
-                  {sol.estado === 'asignada' && (
+                    
                     <button
-                      onClick={() => iniciarServicio(sol.id)}
-                      className="flex-1 px-4 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-all"
+                      onClick={() => abrirChat(sol)}
+                      className="flex-1 px-4 py-2 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 transition-all"
                     >
-                       Iniciar
+                       Chat
                     </button>
-                  )}
-
-                  {sol.estado === 'en_proceso' && (
-                    <button
-                      onClick={() => finalizarServicio(sol.id)}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-all"
-                    >
-                       Finalizar
-                    </button>
-                  )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -254,8 +192,102 @@ function SolicitudesTransportista({ usuario }) {
           onClose={() => setChatAbierto(null)}
         />
       )}
+
+      {/* Modal Detalle con Mapa */}
+      {detalleAbierto && <ModalDetalleSolicitud />}
     </div>
   );
+
+  //  Model detalle de mapa
+  function ModalDetalleSolicitud() {
+    const estadoInfo = getEstadoInfo(detalleAbierto.estado);
+    const siguienteEstado = estadoInfo.siguienteEstado;
+
+    return (
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+          
+          {/* Header */}
+          <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex items-center justify-between z-10">
+            <div>
+              <h2 className="text-2xl font-black text-slate-900">
+                Solicitud de {detalleAbierto.nombreUsuario}
+              </h2>
+              <span className={`inline-block mt-2 px-4 py-2 rounded-full text-sm font-bold ${estadoInfo.bgColor} ${estadoInfo.textColor}`}>
+                {estadoInfo.icono} {estadoInfo.label}
+              </span>
+            </div>
+            <button
+              onClick={() => setDetalleAbierto(null)}
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Contenido */}
+          <div className="p-6 space-y-6">
+            
+            {/* Mapa con Ruta */}
+            <MapaRuta 
+              origen={detalleAbierto.origen}
+              destino={detalleAbierto.destino}
+              height="400px"
+            />
+
+            {/* Info de la solicitud */}
+            <div className="bg-slate-50 rounded-xl p-6 space-y-4">
+              <div>
+                <p className="text-sm font-bold text-slate-500 uppercase mb-2">Descripción de Carga</p>
+                <p className="text-lg text-slate-900">{detalleAbierto.descripcionCarga}</p>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm font-bold text-slate-500 uppercase mb-1">Distancia</p>
+                  <p className="text-xl font-bold text-slate-900">{detalleAbierto.distanciaKm} km</p>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-500 uppercase mb-1">Tipo Vehículo</p>
+                  <p className="text-xl font-bold text-slate-900 capitalize">{detalleAbierto.tipoVehiculo}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-500 uppercase mb-1">Fecha Solicitada</p>
+                  <p className="text-xl font-bold text-slate-900">
+                    {detalleAbierto.fechaSolicitada?.toDate?.()?.toLocaleDateString('es-HN')}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Botones de Acción */}
+            <div className="flex gap-3 pt-4 border-t">
+              <button
+                onClick={() => {
+                  abrirChat(detalleAbierto);
+                  setDetalleAbierto(null);
+                }}
+                className="flex-1 px-6 py-3 bg-slate-100 text-slate-900 font-bold rounded-xl hover:bg-slate-200 transition-all"
+              >
+                 Abrir Chat
+              </button>
+
+              {siguienteEstado && estadoInfo.accionTransportista && (
+                <button
+                  onClick={() => cambiarEstado(detalleAbierto.id, siguienteEstado)}
+                  className="flex-1 px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all text-lg shadow-lg"
+                >
+                  {estadoInfo.accionTransportista}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
 
 export default SolicitudesTransportista;

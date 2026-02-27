@@ -1,20 +1,14 @@
+// src/pages/DashboardCliente/components/ChatTransportista.jsx
 import { useState, useEffect, useRef } from 'react';
 import { 
-  collection, 
-  addDoc, 
-  query, 
-  where,
-  orderBy, 
-  onSnapshot,
-  serverTimestamp,
-  updateDoc,
-  doc
+  collection, addDoc, query, where, orderBy, 
+  onSnapshot, serverTimestamp, updateDoc, doc
 } from 'firebase/firestore';
 import { db } from '../../../firebase/firebase';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-// Iconos
+// Iconos minimalistas
 const IconSend = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -28,6 +22,7 @@ const IconX = () => (
 );
 
 function ChatTransportista({ solicitud, usuario, onClose }) {
+  // --- Mis Estados ---
   const [mensajes, setMensajes] = useState([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const [loading, setLoading] = useState(true);
@@ -35,11 +30,11 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
   const [conversacionId, setConversacionId] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // 1. BUSCAR CONVERSACIÓN (Escucha activa con onSnapshot)
+  // 1. BUSCAR LA CONVERSACIÓN: Uso el id de la solicitud para encontrar el chat
   useEffect(() => {
     if (!solicitud?.id) return;
 
-    // Buscamos la conversación que pertenezca a esta solicitud específica
+    // Hago una consulta a la colección de conversaciones buscando el solicitudId
     const q = query(
       collection(db, 'conversaciones'),
       where('solicitudId', '==', solicitud.id)
@@ -47,10 +42,8 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       if (!snapshot.empty) {
-        // Tomamos el ID del primer documento que coincida
+        // Si existe, guardo el ID de la conversación para cargar los mensajes después
         setConversacionId(snapshot.docs[0].id);
-      } else {
-        console.warn("Esperando a que se cree la conversación...");
       }
     }, (error) => {
       console.error("Error al buscar conversación:", error);
@@ -59,13 +52,13 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
     return () => unsubscribe();
   }, [solicitud]);
 
-  // 2. ESCUCHAR MENSAJES EN TIEMPO REAL
+  // 2. ESCUCHAR LOS MENSAJES: Una vez tengo el ID del chat, escucho los mensajes
   useEffect(() => {
     if (!conversacionId) return;
 
     const q = query(
       collection(db, `conversaciones/${conversacionId}/mensajes`),
-      orderBy('createdAt', 'asc')
+      orderBy('createdAt', 'asc') // Siempre del más antiguo al más nuevo
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -76,7 +69,7 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
       setMensajes(msgs);
       setLoading(false);
       
-      // Auto-scroll al final
+      // Auto-scroll al final para ver el último mensaje
       setTimeout(scrollToBottom, 100);
     });
 
@@ -87,7 +80,7 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // 3. ENVIAR MENSAJE Y ACTUALIZAR PADRE
+  // 3. ENVIAR MENSAJE: Guardo el mensaje y actualizo la previsualización
   const handleEnviar = async (e) => {
     e.preventDefault();
     
@@ -97,7 +90,7 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
       setEnviando(true);
       const textoMensaje = nuevoMensaje.trim();
 
-      // A. Guardar mensaje en la subcolección
+      // A. Meto el mensaje en la subcolección de la conversación
       await addDoc(collection(db, `conversaciones/${conversacionId}/mensajes`), {
         emisorId: usuario.uid,
         nombreEmisor: usuario.nombre,
@@ -106,7 +99,7 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
         createdAt: serverTimestamp()
       });
 
-      // B. Actualizar info en la conversación (para la lista del cliente)
+      // B. Actualizo el documento de la conversación (para que el cliente vea el texto rápido)
       const convRef = doc(db, 'conversaciones', conversacionId);
       await updateDoc(convRef, {
         ultimoMensaje: textoMensaje,
@@ -116,8 +109,8 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
       setNuevoMensaje('');
       scrollToBottom();
     } catch (error) {
-      console.error('Error al enviar mensaje:', error);
-      alert(' Error al enviar mensaje');
+      console.error('Error al enviar:', error);
+      alert('No se pudo enviar el mensaje');
     } finally {
       setEnviando(false);
     }
@@ -127,97 +120,70 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
     if (!timestamp) return '';
     try {
       return format(timestamp.toDate(), 'HH:mm', { locale: es });
-    } catch {
-      return '';
-    }
+    } catch { return ''; }
   };
 
-  // UI de carga inicial mientras se encuentra la conversación
+  // Pantalla de carga mientras se sincroniza el chat
   if (!conversacionId) {
     return (
-      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl p-8 max-w-md text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-4 border-black border-t-transparent mx-auto mb-4"></div>
-          <p className="text-slate-700 font-medium">Sincronizando chat...</p>
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-3xl p-10 max-w-sm text-center shadow-2xl border border-gray-100">
+          <div className="h-8 w-8 border-2 border-black border-t-transparent animate-spin rounded-full mx-auto mb-4"></div>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black">Sincronizando Chat</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-4xl w-full h-[90vh] flex flex-col shadow-2xl">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white border border-gray-200 shadow-2xl max-w-2xl w-full h-[85vh] flex flex-col overflow-hidden rounded-3xl">
         
-        {/* Header con estilo de transportista */}
-        <div className="bg-amber-700 text-white p-4 rounded-t-2xl flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-lg">Cliente :{solicitud.nombreUsuario} </h3>
-            <p className="text-sm text-orange-100 italic">
-              Solicitud: {solicitud.descripcionCarga.substring(0, 40)}...
-            </p>
+        {/* Header - Identidad visual limpia */}
+        <div className="bg-white border-b border-gray-100 px-8 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {/* Avatar del Cliente */}
+            <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
+              {solicitud.nombreUsuario?.charAt(0) || "C"}
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Chat con Cliente</p>
+              <h3 className="font-black text-xl text-black tracking-tight leading-none">
+                {solicitud.nombreUsuario}
+              </h3>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-orange-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-full transition-all text-black"
           >
             <IconX />
           </button>
         </div>
 
-        {/* Resumen de la Solicitud */}
-        <div className="bg-orange-50 border-b border-orange-200 p-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <p className="text-xs font-bold text-orange-700 uppercase"> Origen</p>
-              <p className="text-slate-900 font-medium truncate">{solicitud.origen?.direccion}</p>
-            </div>
-            <div>
-              <p className="text-xs font-bold text-orange-700 uppercase"> Destino</p>
-              <p className="text-slate-900 font-medium truncate">{solicitud.destino?.direccion}</p>
-            </div>
-            <div>
-              <p className="text-xs font-bold text-orange-700 uppercase"> Distancia</p>
-              <p className="text-slate-900 font-medium">{solicitud.distanciaKm} km</p>
-            </div>
-            <div>
-              <p className="text-xs font-bold text-orange-700 uppercase">Status</p>
-              <span className="inline-block px-2 py-0.5 bg-orange-200 text-orange-800 rounded-full text-xs font-black">
-                {solicitud.estado.toUpperCase()}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Área de Mensajes */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+        {/* Área de Mensajes - Fondo Ultra Limpio */}
+        <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-white">
           {mensajes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400">
-              <span className="text-4xl mb-2">🚛</span>
-              <p>Inicia la conversación con el cliente</p>
+            <div className="flex flex-col items-center justify-center h-full opacity-20">
+              <span className="text-3xl mb-2">💬</span>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em]">Sin mensajes aún</p>
             </div>
           ) : (
             mensajes.map((msg) => {
               const esMio = msg.emisorId === usuario.uid;
               return (
                 <div key={msg.id} className={`flex ${esMio ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] ${esMio ? 'order-2' : 'order-1'}`}>
-                    <div className={`rounded-2xl px-4 py-2 shadow-sm ${
+                  <div className={`max-w-[80%] flex flex-col ${esMio ? 'items-end' : 'items-start'}`}>
+                    <div className={`px-5 py-3.5 shadow-sm text-sm font-medium leading-relaxed ${
                       esMio 
-                        ? 'bg-orange-600 text-white rounded-br-none' 
-                        : 'bg-white border border-slate-200 text-slate-900 rounded-bl-none'
+                        ? 'bg-black text-white rounded-2xl rounded-tr-none' 
+                        : 'bg-gray-100 text-black rounded-2xl rounded-tl-none'
                     }`}>
-                      {!esMio && (
-                        <p className="text-[10px] font-black mb-1 uppercase opacity-70">
-                          {msg.nombreEmisor}
-                        </p>
-                      )}
-                      <p className="text-sm leading-relaxed break-words font-medium">
-                        {msg.contenido}
-                      </p>
-                      <p className={`text-[10px] mt-1 text-right ${esMio ? 'text-orange-100' : 'text-slate-500'}`}>
-                        {formatearFecha(msg.createdAt)}
-                      </p>
+                      {msg.contenido}
                     </div>
+                    <p className="text-[9px] mt-1.5 font-bold text-gray-300 uppercase tracking-widest">
+                      {formatearFecha(msg.createdAt)}
+                    </p>
                   </div>
                 </div>
               );
@@ -226,23 +192,27 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Form */}
-        <form onSubmit={handleEnviar} className="bg-white border-t border-slate-200 p-4">
-          <div className="flex gap-2">
+        {/* Input Form - Minimalista */}
+        <form onSubmit={handleEnviar} className="p-6 bg-white">
+          <div className="flex items-center gap-3 bg-gray-100 rounded-2xl px-5 py-2 focus-within:bg-white focus-within:ring-2 focus-within:ring-black transition-all border border-transparent shadow-inner">
             <input
               type="text"
               value={nuevoMensaje}
               onChange={(e) => setNuevoMensaje(e.target.value)}
-              placeholder="Escribe tu respuesta..."
-              className="flex-1 px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-600 font-medium"
+              placeholder="Escribe una respuesta..."
+              className="flex-1 bg-transparent py-3 text-sm focus:outline-none text-black font-medium"
               disabled={enviando}
             />
             <button
               type="submit"
               disabled={enviando || !nuevoMensaje.trim()}
-              className="px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all disabled:opacity-50 flex items-center justify-center"
+              className="p-2 text-black hover:scale-110 transition-transform disabled:opacity-10"
             >
-              {enviando ? <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" /> : <IconSend />}
+              {enviando ? (
+                <div className="h-5 w-5 border-2 border-black border-t-transparent animate-spin rounded-full" />
+              ) : (
+                <IconSend />
+              )}
             </button>
           </div>
         </form>

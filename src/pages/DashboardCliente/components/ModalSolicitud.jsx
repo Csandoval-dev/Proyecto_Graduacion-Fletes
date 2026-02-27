@@ -32,7 +32,7 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
 
   if (!isOpen) return null;
 
-  // Calcular distancia aproximada entre dos puntos (fórmula Haversine simplificada)
+  // Calcular distancia aproximada entre dos puntos fórmula Haversine 
   const calcularDistancia = (origen, destino) => {
     if (!origen || !destino) return 0;
     const R = 6371; // Radio de la Tierra en km
@@ -98,7 +98,7 @@ await addDoc(collection(db, 'conversaciones'), {
   createdAt: serverTimestamp()
 });
 
-      alert('✅ Solicitud enviada correctamente');
+      alert(' Solicitud enviada correctamente');
       onSuccess && onSuccess(solicitudRef.id);
       onClose();
       
@@ -112,7 +112,7 @@ await addDoc(collection(db, 'conversaciones'), {
       setPaso(1);
     } catch (error) {
       console.error('Error al crear solicitud:', error);
-      alert('❌ Error al crear la solicitud');
+      alert(' Error al crear la solicitud');
     } finally {
       setLoading(false);
     }
@@ -315,7 +315,7 @@ await addDoc(collection(db, 'conversaciones'), {
               disabled={loading}
               className="flex-1 px-6 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50"
             >
-              {loading ? 'Enviando...' : '📤 Enviar Solicitud'}
+              {loading ? 'Enviando...' : ' Enviar Solicitud'}
             </button>
           )}
         </div>
