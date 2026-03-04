@@ -3,11 +3,11 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db, getMessagingInstance } from '../firebase/firebase';
 
 const VAPID_KEY = 'BNZDYKYgu2CmN0-no0xg5Aqzvx6lczSESmJgFerYpybSGZL2BNGz7I08xjXLW1ItnU5fuvPpDGpvb51OmVVS0Sc';
-
+// Funcion para Solicitar permiso de notifiaciones y obtenr el token FCM
 export const solicitarPermisoNotificaciones = async (usuarioId) => {
   try {
     if (!('Notification' in window)) return null;
-
+// Obtener instancia de messaging
     const messagingInstance = await getMessagingInstance();
     if (!messagingInstance) return null;
 
@@ -15,28 +15,28 @@ export const solicitarPermisoNotificaciones = async (usuarioId) => {
     if (permission !== 'granted') return null;
 
     const token = await getToken(messagingInstance, { vapidKey: VAPID_KEY });
-
+//Guardar token en Firestore
     if (token) {
       await updateDoc(doc(db, 'usuarios', usuarioId), {
         fcmToken: token,
         fcmTokenActualizado: new Date()
       });
-      console.log('✅ Token FCM guardado');
+      console.log(' Token FCM guardado');
       return token;
     }
     return null;
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error(' Error:', error);
     return null;
   }
 };
-
+// Funcio para escuchar notificaciones en primer plano
 export const escucharNotificaciones = async (callback) => {
   const messagingInstance = await getMessagingInstance();
   if (!messagingInstance) return;
 
   onMessage(messagingInstance, async (payload) => {
-    console.log('📩 Notificación primer plano:', payload);
+    console.log(' Notificación primer plano:', payload);
 
     const titulo = payload.data?.titulo || 'Fletia HND';
     const mensaje = payload.data?.mensaje || 'Nueva notificación';
@@ -47,18 +47,18 @@ export const escucharNotificaciones = async (callback) => {
         if (registration) {
           await registration.showNotification(titulo, {
             body: mensaje,
-            tag: 'fletia-' + Date.now(), // ✅ tag único siempre
-            requireInteraction: true,   // ✅ se queda visible
+            tag: 'fletia-' + Date.now(), //  tag único siempre
+            requireInteraction: true,   //  se queda visible
           });
-          console.log('✅ Notificación mostrada');
+          console.log(' Notificación mostrada');
         }
       } catch(error) {
-        console.error('❌ Error:', error);
+        console.error(' Error:', error);
       }
     }
 
     if (callback) callback(payload);
   });
 
-  console.log('✅ Escuchando notificaciones');
+  console.log(' Escuchando notificaciones');
 };

@@ -13,7 +13,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-// ✅ MANEJAR MENSAJES EN BACKGROUND
+//Manejar mensajes en segundo Plano
 messaging.onBackgroundMessage((payload) => {
   console.log('[SW] Mensaje recibido:', payload);
 
@@ -23,7 +23,7 @@ messaging.onBackgroundMessage((payload) => {
 
   console.log('[SW] Mostrando notificación:', titulo, mensaje);
 
-  // ✅ MOSTRAR LA NOTIFICACIÓN
+  // 
   const notificationOptions = {
     body: mensaje,
     icon: payload.notification?.icon || '/favicon.ico',
@@ -37,11 +37,11 @@ messaging.onBackgroundMessage((payload) => {
     }
   };
 
-  // ✅ IMPORTANTE: Retornar la promesa
+  // Retornar la promesa
   return self.registration.showNotification(titulo, notificationOptions);
 });
 
-// ✅ MANEJAR CLICKS EN NOTIFICACIONES
+// MANEJAR CLICKS EN NOTIFICACIONES
 self.addEventListener('notificationclick', (event) => {
   console.log('[SW] Click en notificación');
   
@@ -64,7 +64,7 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// ✅ LOG CUANDO SE INSTALA EL SERVICE WORKER
+//  LOG CUANDO SE INSTALA EL SERVICE WORKER
 self.addEventListener('install', (event) => {
   console.log('[SW] Service Worker instalado');
   self.skipWaiting();

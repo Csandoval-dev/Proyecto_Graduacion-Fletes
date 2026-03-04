@@ -1,4 +1,3 @@
-// src/pages/DashboardCliente/components/Chat.jsx
 import { useState, useEffect, useRef } from 'react';
 import { 
   collection, addDoc, query, orderBy, onSnapshot, 

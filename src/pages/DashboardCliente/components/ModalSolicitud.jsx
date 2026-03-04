@@ -69,11 +69,11 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
         ...(destino && { lat: destino.lat, lng: destino.lng })
       };
 
-    // 1. Crear solicitud con el ID correcto
+    // Crear solicitud con el ID correcto
 const solicitudRef = await addDoc(collection(db, 'solicitudes'), {
   usuarioId: usuario.uid,
   nombreUsuario: usuario.nombre,
-  // CAMBIO CLAVE: Usamos usuarioId (el UID de Auth) no el ID del documento
+  // Usamos usuarioId el UID de Auth no el ID del documento
   transportistaId: transportista.usuarioId, 
   nombreTransportista: transportista.nombre,
   origen: origenData,
@@ -86,10 +86,10 @@ const solicitudRef = await addDoc(collection(db, 'solicitudes'), {
   createdAt: serverTimestamp()
 });
 
-// 2. Crear conversación usando los mismos UIDs
+//  Crear conversación usando los mismos UIDs
 await addDoc(collection(db, 'conversaciones'), {
   solicitudId: solicitudRef.id,
-  // CAMBIO CLAVE: Los participantes deben ser UIDs de Authentication
+  // Los participantes deben ser UIDs de Authentication
   participantes: [usuario.uid, transportista.usuarioId],
   nombreCliente: usuario.nombre,
   nombreTransportista: transportista.nombre,

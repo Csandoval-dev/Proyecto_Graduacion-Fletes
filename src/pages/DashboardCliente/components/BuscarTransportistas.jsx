@@ -1,4 +1,3 @@
-// src/pages/DashboardCliente/components/BuscarTransportistas.jsx
 import { useState, useEffect } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
@@ -47,7 +46,7 @@ const IconFilter = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
   </svg>
 );
-
+// Componente principal
 function BuscarTransportistas({ usuario }) {
   const [transportistas, setTransportistas] = useState([]);
   const [transportistasFiltrados, setTransportistasFiltrados] = useState([]);
@@ -169,13 +168,13 @@ function BuscarTransportistas({ usuario }) {
   return (
     <div className="space-y-6">
       
-      {/* ========== HEADER ========== */}
+      {/* HEADER*/}
       <div>
         <h1 className="text-3xl font-black text-slate-900"></h1>
         <p className="text-slate-600 mt-1">Encuentra al transportista perfecto para tu carga</p>
       </div>
 
-      {/* ========== ESTADÍSTICAS RÁPIDAS ========== */}
+      {/* ESTADÍSTICAS RÁPIDAS  */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Transportistas</p>
@@ -197,7 +196,7 @@ function BuscarTransportistas({ usuario }) {
         </div>
       </div>
 
-      {/* ========== FILTROS ========== */}
+      {/*  FILTROS */}
       <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
           <IconFilter />
@@ -285,7 +284,7 @@ function BuscarTransportistas({ usuario }) {
         </div>
       </div>
 
-      {/* ========== GRID DE TRANSPORTISTAS ========== */}
+      {/* GRID DE TRANSPORTISTAS */}
       {transportistasFiltrados.length === 0 ? (
         <div className="bg-white p-12 rounded-xl border border-slate-200 text-center">
           <div className="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">

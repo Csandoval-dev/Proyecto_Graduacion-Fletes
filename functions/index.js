@@ -196,6 +196,7 @@ async function enviarNotificacionPush(usuarioId, titulo, mensaje) {
       console.log(`Usuario ${usuarioId} no tiene token FCM`);
       return false;
     }
+    // Contruir el payload de la notificacion
 const payload = {
   notification: {  
     title: titulo,  
@@ -235,7 +236,7 @@ const payload = {
   }
 }
 
-// 1. NOTIFICAR CUANDO SE CREA UNA NUEVA SOLICITUD
+// Trigger para notificar al transportista cuando se crea una nueva solicitu de flete
 exports.notificarNuevaSolicitud = onDocumentCreated(
   "solicitudes/{solicitudId}",
   async (event) => {
@@ -256,7 +257,7 @@ exports.notificarNuevaSolicitud = onDocumentCreated(
   }
 );
 
-// 2. NOTIFICAR CUANDO CAMBIA EL ESTADO DE UNA SOLICITUD
+// trigger para notificar al cliente y transportista cuando hay un cambio  de estado en la solicitud de flete.
 exports.notificarCambioEstado = onDocumentUpdated(
   "solicitudes/{solicitudId}",
   async (event) => {
@@ -302,7 +303,7 @@ exports.notificarCambioEstado = onDocumentUpdated(
   }
 );
 
-// 3. NOTIFICAR CUANDO HAY UN NUEVO MENSAJE EN EL CHAT
+//Trigger para notificar a los participantes de una conversacion cuando se recibe un mensaje  nuevo.
 exports.notificarNuevoMensaje = onDocumentCreated(
   "conversaciones/{conversacionId}/mensajes/{mensajeId}",
   async (event) => {

@@ -259,6 +259,7 @@ function DashboardCliente() {
         </header>
 
         {/* Área de contenido con scroll */}
+      
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 lg:p-8">
             <div className="max-w-7xl mx-auto">

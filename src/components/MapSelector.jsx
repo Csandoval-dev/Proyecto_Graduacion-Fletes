@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-lea
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// 1. Componente para MOVER el mapa dinámicamente
+//  Componente para MOVER el mapa dinámicamente
 function ChangeView({ center }) {
   const map = useMap();
   useEffect(() => {
@@ -46,17 +46,27 @@ function MapSelector({ position, setPosition, direccionTexto, setDireccionTexto,
     } catch (e) { console.error(e); }
   };
 
+  //Funcio para buscar direcciones usando Nominatim
   const buscarDirecciones = async (texto) => {
-    if (texto.length < 3) return;
-    setBuscando(true);
-    try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(texto)}&countrycodes=hn&limit=5`);
-      const data = await response.json();
-      setSugerencias(data);
-      setMostrarSugerencias(true);
-    } finally { setBuscando(false); }
-  };
-
+  if (texto.length < 3) return;
+  setBuscando(true);
+  
+  // Estos valores definen el rectángulo que encierra SPS
+  const viewbox = "-88.15,15.35,-87.85,15.65"; 
+  
+  try {
+    // Añadimos 'viewbox' y 'bounded=1' para forzar a que solo busque dentro de ese recuadro
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(texto)}&countrycodes=hn&viewbox=${viewbox}&bounded=1&limit=5`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    setSugerencias(data);
+    setMostrarSugerencias(true);
+  } finally { 
+    setBuscando(false); 
+  }
+};
+  //Limpiar sugerencias al escribir o al hacer click afuera
   const handleDireccionChange = (e) => {
     const texto = e.target.value;
     setDireccionTexto(texto);
@@ -65,10 +75,10 @@ function MapSelector({ position, setPosition, direccionTexto, setDireccionTexto,
   };
 
   const seleccionarSugerencia = (sug) => {
-    const coords = { lat: parseFloat(sug.lat), lng: parseFloat(sug.lon) };
+    const coords = { lat: parseFloat(sug.lat), lng: parseFloat(sug.lon) };//
     setDireccionTexto(sug.display_name);
     setPosition(coords);
-    setCenter([coords.lat, coords.lng]); // Esto ahora sí moverá el mapa gracias a ChangeView
+    setCenter([coords.lat, coords.lng]); // Centrar el mapa en la ubicacion seleccionada
     setMostrarSugerencias(false);
   };
 

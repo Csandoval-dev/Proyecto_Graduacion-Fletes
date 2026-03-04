@@ -1,4 +1,3 @@
-// src/pages/Dashboardtransportista/components/SolicitudesTransportista.jsx
 import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc, orderBy, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../firebase/firebase';
@@ -18,15 +17,15 @@ function SolicitudesTransportista({ usuario }) {
   const [filtro, setFiltro] = useState('pendiente');
   const [chatAbierto, setChatAbierto] = useState(null);
   const [detalleAbierto, setDetalleAbierto] = useState(null);
-
+//Cargar solicitudes al montar y cuando cabe el usuario o el filtro cambie
   useEffect(() => {
     cargarSolicitudes();
   }, [usuario, filtro]);
-
+//Funcion para cargar solicitudes  desde firebase con filtros y odenados por fecha de creacion
   const cargarSolicitudes = async () => {
     try {
-      setLoading(true);
-      
+      setLoading(true)
+      //Contruir consulta con filtros
       let q;
       if (filtro === 'todas') {
         q = query(
@@ -42,7 +41,7 @@ function SolicitudesTransportista({ usuario }) {
           orderBy('createdAt', 'desc')
         );
       }
-
+//Ejecutamos la consulta y mapeamos los resultados
       const snapshot = await getDocs(q);
       const lista = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -56,7 +55,7 @@ function SolicitudesTransportista({ usuario }) {
       setLoading(false);
     }
   };
-
+//Funcion para cambiar estado de la solicitud
   const cambiarEstado = async (solicitudId, nuevoEstado) => {
     const estadoInfo = getEstadoInfo(nuevoEstado);
     

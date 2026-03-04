@@ -1,12 +1,10 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { onAuthStateChanged } from "firebase/auth"; // Falta esta importación
-import { auth } from "./firebase/firebase"; // Asegúrate de que la ruta sea correcta
+import { onAuthStateChanged } from "firebase/auth"; 
+import { auth } from "./firebase/firebase"; 
 import React, { useEffect, useRef } from 'react'; 
 
 // Configuración de Cloud Messaging
 import { solicitarPermisoNotificaciones, escucharNotificaciones } from './services/notificacionesService';
-
-// Importaciones de tus páginas...
 import Landing from "./pages/landing/Landing";
 import Login from "./pages/login/login";
 import Register from "./pages/registro/register";
@@ -18,12 +16,12 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import RoleBasedRoute from "./components/RoleBasedRoute";
 
 function App() {
- const notificacionesIniciadasRef = useRef(false); // ← controla que solo se inicie una vez
+ const notificacionesIniciadasRef = useRef(false); // Controla si ya se han iniciado las notificaciones para evitar multiples inicializaciones
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user && !notificacionesIniciadasRef.current) {
-        notificacionesIniciadasRef.current = true; // ← marca como iniciado
+        notificacionesIniciadasRef.current = true; // Nos muestra que ya se han iniciado las notificaciones para este usuario
         
         await solicitarPermisoNotificaciones(user.uid);
         await escucharNotificaciones((payload) => {
@@ -32,7 +30,7 @@ function App() {
       }
       
       if (!user) {
-        notificacionesIniciadasRef.current = false; // ← reset al cerrar sesión
+        notificacionesIniciadasRef.current = false; // Reinicia el estado para permitir la inicializacion de notificaciones para el proximo usuario que inicie sesion
       }
     });
 
