@@ -1,3 +1,4 @@
+
 export const ESTADOS_FLETE = {
   pendiente: {
     label: "Pendiente",
@@ -6,7 +7,7 @@ export const ESTADOS_FLETE = {
     bgColor: "bg-yellow-100",
     textColor: "text-yellow-700",
     borderColor: "border-yellow-200",
-
+    icono: "",
     siguienteEstado: "aceptada",
     accionTransportista: "Aceptar Solicitud",  
     accionCliente: null,
@@ -20,11 +21,25 @@ export const ESTADOS_FLETE = {
     bgColor: "bg-blue-100",
     textColor: "text-blue-700",
     borderColor: "border-blue-200",
-    icono: "✓",
+    icono: "",
+    siguienteEstado: "pagado",
+    accionTransportista: null,
+    accionCliente: null,
+    notificar: ["cliente"]
+  },
+
+  pagado: {
+    label: "Pagado",
+    descripcion: "Pago confirmado - Listo para iniciar",
+    color: "green",
+    bgColor: "bg-green-100",
+    textColor: "text-green-700",
+    borderColor: "border-green-200",
+    icono: "",
     siguienteEstado: "en_camino",
     accionTransportista: "Iniciar Servicio",
     accionCliente: null,
-    notificar: ["cliente"]
+    notificar: ["transportista"]
   },
   
   en_camino: {
@@ -34,6 +49,7 @@ export const ESTADOS_FLETE = {
     bgColor: "bg-purple-100",
     textColor: "text-purple-700",
     borderColor: "border-purple-200",
+    icono: "",
     siguienteEstado: "recogido",
     accionTransportista: "Marcar Recogido",
     accionCliente: null,
@@ -47,12 +63,16 @@ export const ESTADOS_FLETE = {
     bgColor: "bg-orange-100",
     textColor: "text-orange-700",
     borderColor: "border-orange-200",
+    icono: "",
     siguienteEstado: "entregado",
     accionTransportista: "Marcar Entregado",
     accionCliente: null,
     notificar: ["cliente"]
   },
   
+  // ==========================================
+  // MODIFICADO: Ahora el CLIENTE finaliza
+  // ==========================================
   entregado: {
     label: "Entregado",
     descripcion: "La carga fue entregada",
@@ -60,9 +80,10 @@ export const ESTADOS_FLETE = {
     bgColor: "bg-green-100",
     textColor: "text-green-700",
     borderColor: "border-green-200",
+    icono: "",
     siguienteEstado: "finalizado",
-    accionTransportista: null,
-    accionCliente: "Confirmar y Calificar",
+    accionTransportista: null, // CAMBIO: Transportista ya no puede finalizar
+    accionCliente: "Confirmar y Calificar", // CAMBIO: Cliente finaliza con calificación
     notificar: ["cliente"]
   },
   
@@ -73,6 +94,7 @@ export const ESTADOS_FLETE = {
     bgColor: "bg-green-100",
     textColor: "text-green-700",
     borderColor: "border-green-200",
+    icono: "",
     siguienteEstado: null,
     accionTransportista: null,
     accionCliente: null,
@@ -86,6 +108,7 @@ export const ESTADOS_FLETE = {
     bgColor: "bg-red-100",
     textColor: "text-red-700",
     borderColor: "border-red-200",
+    icono: "",
     siguienteEstado: null,
     accionTransportista: null,
     accionCliente: null,
@@ -99,8 +122,12 @@ export const getEstadoInfo = (estado) => {
 
 export const MENSAJES_NOTIFICACION = {
   aceptada: {
-    titulo: "¡Solicitud Aceptada!",
+    titulo: "Solicitud Aceptada",
     mensaje: "El transportista aceptó tu solicitud de flete"
+  },
+  pagado: { 
+    titulo: "Pago Confirmado",
+    mensaje: "El pago fue confirmado. El servicio iniciará pronto"
   },
   en_camino: {
     titulo: "Transportista en Camino",
@@ -112,11 +139,16 @@ export const MENSAJES_NOTIFICACION = {
   },
   entregado: {
     titulo: "Carga Entregada",
-    mensaje: "Tu carga fue entregada. Por favor confirma la recepción"
+    mensaje: "Tu carga fue entregada"
+  },
+  
+  calificacion_recibida: {
+    titulo: "Nueva Calificación",
+    mensaje: "Has recibido una nueva calificación de un cliente"
   },
   finalizado: {
     titulo: "Servicio Finalizado",
-    mensaje: "El servicio ha sido completado exitosamente"
+    mensaje: "Gracias por usar Fletia. El servicio ha sido completado"
   },
   cancelado: {
     titulo: "Servicio Cancelado",

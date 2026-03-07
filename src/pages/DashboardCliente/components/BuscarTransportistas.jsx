@@ -308,7 +308,7 @@ function BuscarTransportistas({ usuario }) {
                       {transportista.nombre}
                     </h3>
                     <p className="text-sm text-slate-600 flex items-center gap-1">
-                      📍 {transportista.zona}
+                       {transportista.zona}
                     </p>
                   </div>
                   
@@ -405,7 +405,7 @@ function BuscarTransportistas({ usuario }) {
                   {selectedTransportista.nombre}
                 </h2>
                 <p className="text-slate-600 flex items-center gap-2 mt-1">
-                  📍 {selectedTransportista.zona}
+                   {selectedTransportista.zona}
                 </p>
               </div>
               <button
@@ -516,8 +516,8 @@ function BuscarTransportistas({ usuario }) {
                 disabled={!selectedTransportista.disponible}
               >
                 {selectedTransportista.disponible 
-                  ? "📤 Solicitar Flete" 
-                  : "❌ No disponible actualmente"}
+                  ? " Solicitar Flete" 
+                  : " No disponible actualmente"}
               </button>
             </div>
           </div>

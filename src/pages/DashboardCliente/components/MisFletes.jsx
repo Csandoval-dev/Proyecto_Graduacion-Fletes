@@ -4,6 +4,7 @@ import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
 import MapaRuta from "../../../components/MapaRuta";
 import { getEstadoInfo } from "../../../constants/estadosFlete";
+import ModalCalificacion from "../../../components/ModalCalificacion";
 
 
 const IconTruck = () => (
@@ -24,6 +25,8 @@ function MisFletes({ usuario }) {
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState('activos');
   const [detalleAbierto, setDetalleAbierto] = useState(null);
+
+  const [calificacionAbierta, setCalificacionAbierta] = useState(null);
 
   useEffect(() => {
     if (usuario?.uid) {
@@ -68,6 +71,22 @@ function MisFletes({ usuario }) {
 
   const abrirDetalle = (solicitud) => {
     setDetalleAbierto(solicitud);
+  };
+
+  // ==========================================
+  // NUEVO: Función para abrir modal de calificación
+  // ==========================================
+  const abrirCalificacion = (solicitud) => {
+    setCalificacionAbierta(solicitud);
+    setDetalleAbierto(null); // Cerrar modal de detalle
+  };
+
+  // ==========================================
+  // NUEVO: Callback después de calificar
+  // ==========================================
+  const handleCalificacionExitosa = () => {
+    setCalificacionAbierta(null);
+    cargarSolicitudes(); // Recargar lista
   };
 
   const formatearFecha = (timestamp) => {
@@ -195,6 +214,21 @@ function MisFletes({ usuario }) {
           solicitud={detalleAbierto}
           usuario={usuario}
           onClose={() => setDetalleAbierto(null)}
+          // ==========================================
+          // NUEVO: Pasar función para abrir calificación
+          // ==========================================
+          onAbrirCalificacion={abrirCalificacion}
+        />
+      )}
+
+      {/* ==========================================
+          NUEVO: Modal de Calificación
+          ========================================== */}
+      {calificacionAbierta && (
+        <ModalCalificacion
+          solicitud={calificacionAbierta}
+          onClose={() => setCalificacionAbierta(null)}
+          onCalificar={handleCalificacionExitosa}
         />
       )}
     </div>
@@ -202,18 +236,14 @@ function MisFletes({ usuario }) {
 }
 
 // ========== MODAL CON PESTAÑAS ==========
-function ModalDetalle({ solicitud, usuario, onClose }) {
+function ModalDetalle({ solicitud, usuario, onClose, onAbrirCalificacion }) {
   const [pestanaActiva, setPestanaActiva] = useState('seguimiento');
   const [conversacionId, setConversacionId] = useState(null);
   
   const estadoInfo = getEstadoInfo(solicitud.estado);
 
-  
- 
-
   const pestanas = [
     { id: 'seguimiento', label: ' Seguimiento',},
-
     { id: 'info', label: ' Información', icono: '' }
   ];
 
@@ -270,6 +300,26 @@ function ModalDetalle({ solicitud, usuario, onClose }) {
                 destino={solicitud.destino}
                 height="400px"
               />
+
+              {/* ==========================================
+                  NUEVO: Banner de estado "entregado"
+                  ========================================== */}
+              {solicitud.estado === 'entregado' && (
+                <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6">
+                  <p className="text-lg font-bold text-green-900 mb-2">
+                    Tu carga fue entregada
+                  </p>
+                  <p className="text-sm text-green-700 mb-4">
+                    ¿Cómo fue tu experiencia con {solicitud.nombreTransportista}?
+                  </p>
+                  <button
+                    onClick={() => onAbrirCalificacion(solicitud)}
+                    className="w-full px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-all text-lg"
+                  >
+                    Confirmar y Calificar Servicio
+                  </button>
+                </div>
+              )}
 
               {/* Historial */}
               <div className="bg-slate-50 rounded-xl p-6">

@@ -67,7 +67,7 @@ function MapaRuta({ origen, destino, height = "400px" }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-start gap-2">
-            <span className="text-2xl">📍</span>
+            <span className="text-2xl"></span>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-green-700 uppercase mb-1">Origen</p>
               <p className="text-sm text-green-900 break-words">{origen?.direccion || 'No especificado'}</p>
@@ -77,7 +77,7 @@ function MapaRuta({ origen, destino, height = "400px" }) {
         
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-start gap-2">
-            <span className="text-2xl">🎯</span>
+            <span className="text-2xl"></span>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-red-700 uppercase mb-1">Destino</p>
               <p className="text-sm text-red-900 break-words">{destino?.direccion || 'No especificado'}</p>

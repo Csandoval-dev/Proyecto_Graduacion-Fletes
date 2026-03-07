@@ -32,7 +32,7 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
 
   if (!isOpen) return null;
 
-  // Calcular distancia aproximada entre dos puntos fórmula Haversine 
+  // Calcular distancia aproximada entre dos puntos usando fórmula Haversine 
   const calcularDistancia = (origen, destino) => {
     if (!origen || !destino) return 0;
     const R = 6371; // Radio de la Tierra en km
@@ -48,7 +48,7 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
 
   const handleCrearSolicitud = async () => {
     if (!origenTexto || !destinoTexto || !descripcionCarga || !fechaSolicitada) {
-      alert('⚠️ Por favor completa todos los campos');
+      alert('Por favor completa todos los campos');
       return;
     }
 
@@ -69,36 +69,46 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
         ...(destino && { lat: destino.lat, lng: destino.lng })
       };
 
-    // Crear solicitud con el ID correcto
-const solicitudRef = await addDoc(collection(db, 'solicitudes'), {
-  usuarioId: usuario.uid,
-  nombreUsuario: usuario.nombre,
-  // Usamos usuarioId el UID de Auth no el ID del documento
-  transportistaId: transportista.usuarioId, 
-  nombreTransportista: transportista.nombre,
-  origen: origenData,
-  destino: destinoData,
-  distanciaKm: parseFloat(distanciaKm.toFixed(2)),
-  descripcionCarga,
-  tipoVehiculo: transportista?.vehiculo?.tipo || 'No especificado',
-  fechaSolicitada: new Date(fechaSolicitada),
-  estado: 'pendiente',
-  createdAt: serverTimestamp()
-});
+      // ==========================================
+      // CREAR SOLICITUD CON CAMPOS DE PAGO
+      // AGREGADO DEL PRIMER CÓDIGO
+      // ==========================================
+      const solicitudRef = await addDoc(collection(db, 'solicitudes'), {
+        usuarioId: usuario.uid,
+        nombreUsuario: usuario.nombre,
+        // Usamos usuarioId el UID de Auth no el ID del documento
+        transportistaId: transportista.usuarioId, 
+        nombreTransportista: transportista.nombre,
+        origen: origenData,
+        destino: destinoData,
+        distanciaKm: parseFloat(distanciaKm.toFixed(2)),
+        descripcionCarga,
+        tipoVehiculo: transportista?.vehiculo?.tipo || 'No especificado',
+        fechaSolicitada: new Date(fechaSolicitada),
+        
+        // NUEVOS CAMPOS AGREGADOS PARA SISTEMA DE PAGOS
+        // Se llenarán durante la negociación en el chat
+        precioAcordado: null,  // Se llenará cuando el cliente acepte la oferta
+        oferta: null,          // Se llenará cuando el transportista envíe precio
+        pagado: false,         // Inicia como false, cambia a true después del pago
+        
+        estado: 'pendiente',
+        createdAt: serverTimestamp()
+      });
 
-//  Crear conversación usando los mismos UIDs
-await addDoc(collection(db, 'conversaciones'), {
-  solicitudId: solicitudRef.id,
-  // Los participantes deben ser UIDs de Authentication
-  participantes: [usuario.uid, transportista.usuarioId],
-  nombreCliente: usuario.nombre,
-  nombreTransportista: transportista.nombre,
-  ultimoMensaje: `Nueva solicitud de flete: ${descripcionCarga.substring(0, 50)}...`,
-  ultimoMensajeTimestamp: serverTimestamp(),
-  createdAt: serverTimestamp()
-});
+      // Crear conversación usando los mismos UIDs
+      await addDoc(collection(db, 'conversaciones'), {
+        solicitudId: solicitudRef.id,
+        // Los participantes deben ser UIDs de Authentication
+        participantes: [usuario.uid, transportista.usuarioId],
+        nombreCliente: usuario.nombre,
+        nombreTransportista: transportista.nombre,
+        ultimoMensaje: `Nueva solicitud de flete: ${descripcionCarga.substring(0, 50)}...`,
+        ultimoMensajeTimestamp: serverTimestamp(),
+        createdAt: serverTimestamp()
+      });
 
-      alert(' Solicitud enviada correctamente');
+      alert('Solicitud enviada correctamente');
       onSuccess && onSuccess(solicitudRef.id);
       onClose();
       
@@ -112,7 +122,7 @@ await addDoc(collection(db, 'conversaciones'), {
       setPaso(1);
     } catch (error) {
       console.error('Error al crear solicitud:', error);
-      alert(' Error al crear la solicitud');
+      alert('Error al crear la solicitud');
     } finally {
       setLoading(false);
     }
@@ -120,11 +130,11 @@ await addDoc(collection(db, 'conversaciones'), {
 
   const handleSiguiente = () => {
     if (paso === 1 && !origenTexto.trim()) {
-      alert('⚠️ Escribe la dirección de origen');
+      alert('Escribe la dirección de origen');
       return;
     }
     if (paso === 2 && !destinoTexto.trim()) {
-      alert('⚠️ Escribe la dirección de destino');
+      alert('Escribe la dirección de destino');
       return;
     }
     setPaso(paso + 1);
@@ -184,7 +194,7 @@ await addDoc(collection(db, 'conversaciones'), {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <IconMap />
-                <h3 className="text-lg font-bold text-slate-900">¿Dónde recogerán la carga?</h3>
+                <h3 className="text-lg font-bold text-slate-900">Dónde recogerán la carga</h3>
               </div>
               <MapSelector 
                 position={origen} 
@@ -202,7 +212,7 @@ await addDoc(collection(db, 'conversaciones'), {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <IconMap />
-                <h3 className="text-lg font-bold text-slate-900">¿A dónde llevarán la carga?</h3>
+                <h3 className="text-lg font-bold text-slate-900">A dónde llevarán la carga</h3>
               </div>
               <MapSelector 
                 position={destino} 
@@ -220,17 +230,17 @@ await addDoc(collection(db, 'conversaciones'), {
             <div className="space-y-6">
               <h3 className="text-lg font-bold text-slate-900">Detalles del flete</h3>
 
-              {/* Resumen de ubicaciones */}
+              {/* Resumen de ubicaciones - SIN EMOJIS */}
               <div className="bg-slate-50 p-4 rounded-lg space-y-2">
                 <div className="flex items-start gap-2">
-                  <span className="text-green-600 font-bold">📍</span>
+                  <span className="text-green-600 font-bold">A</span>
                   <div className="flex-1">
                     <p className="text-xs text-slate-500 font-bold">Origen</p>
                     <p className="text-sm text-slate-900">{origenTexto}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-red-600 font-bold">📍</span>
+                  <span className="text-red-600 font-bold">B</span>
                   <div className="flex-1">
                     <p className="text-xs text-slate-500 font-bold">Destino</p>
                     <p className="text-sm text-slate-900">{destinoTexto}</p>
@@ -249,7 +259,7 @@ await addDoc(collection(db, 'conversaciones'), {
               {/* Descripción de la carga */}
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Descripción de la carga *
+                  Descripción de la carga
                 </label>
                 <textarea
                   value={descripcionCarga}
@@ -263,7 +273,7 @@ await addDoc(collection(db, 'conversaciones'), {
               {/* Fecha deseada */}
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Fecha y hora deseada *
+                  Fecha y hora deseada
                 </label>
                 <input
                   type="datetime-local"
@@ -298,7 +308,7 @@ await addDoc(collection(db, 'conversaciones'), {
               disabled={loading}
               className="flex-1 px-6 py-3 bg-slate-100 text-slate-900 font-bold rounded-xl hover:bg-slate-200 transition-all disabled:opacity-50"
             >
-              ← Atrás
+              Atrás
             </button>
           )}
           
@@ -307,7 +317,7 @@ await addDoc(collection(db, 'conversaciones'), {
               onClick={handleSiguiente}
               className="flex-1 px-6 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all"
             >
-              Siguiente →
+              Siguiente
             </button>
           ) : (
             <button
@@ -315,7 +325,7 @@ await addDoc(collection(db, 'conversaciones'), {
               disabled={loading}
               className="flex-1 px-6 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all disabled:opacity-50"
             >
-              {loading ? 'Enviando...' : ' Enviar Solicitud'}
+              {loading ? 'Enviando...' : 'Enviar Solicitud'}
             </button>
           )}
         </div>

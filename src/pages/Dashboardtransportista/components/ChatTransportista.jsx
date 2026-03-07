@@ -1,4 +1,3 @@
-// src/pages/DashboardCliente/components/ChatTransportista.jsx
 import { useState, useEffect, useRef } from 'react';
 import { 
   collection, addDoc, query, where, orderBy, 
@@ -7,6 +6,7 @@ import {
 import { db } from '../../../firebase/firebase';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { calcularDesglosePago } from '../../../utils/calcularComision';
 
 // Iconos minimalistas
 const IconSend = () => (
@@ -22,7 +22,7 @@ const IconX = () => (
 );
 
 function ChatTransportista({ solicitud, usuario, onClose }) {
-  // --- Mis Estados ---
+  // Estados existentes para mensajes
   const [mensajes, setMensajes] = useState([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,12 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
   const [conversacionId, setConversacionId] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // 1. BUSCAR LA CONVERSACIÓN: Uso el id de la solicitud para encontrar el chat
+//Estados del flete para mostrar boton de enviar precio formal, solo cuando la solicitud este aceptada
+  const [mostrarFormPrecio, setMostrarFormPrecio] = useState(false);
+  const [montoPrecio, setMontoPrecio] = useState('');
+  const [enviandoPrecio, setEnviandoPrecio] = useState(false);
+
+  //  BUSCAR LA CONVERSACIÓN: Uso el id de la solicitud para encontrar el chat
   useEffect(() => {
     if (!solicitud?.id) return;
 
@@ -52,7 +57,7 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
     return () => unsubscribe();
   }, [solicitud]);
 
-  // 2. ESCUCHAR LOS MENSAJES: Una vez tengo el ID del chat, escucho los mensajes
+  //  ESCUCHAR LOS MENSAJES: Una vez tengo el ID del chat, escucho los mensajes
   useEffect(() => {
     if (!conversacionId) return;
 
@@ -80,7 +85,7 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // 3. ENVIAR MENSAJE: Guardo el mensaje y actualizo la previsualización
+  //  ENVIAR MENSAJE: Guardo el mensaje y actualizo la previsualización
   const handleEnviar = async (e) => {
     e.preventDefault();
     
@@ -90,7 +95,7 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
       setEnviando(true);
       const textoMensaje = nuevoMensaje.trim();
 
-      // A. Meto el mensaje en la subcolección de la conversación
+      // Meto el mensaje en la subcolección de la conversación
       await addDoc(collection(db, `conversaciones/${conversacionId}/mensajes`), {
         emisorId: usuario.uid,
         nombreEmisor: usuario.nombre,
@@ -99,7 +104,7 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
         createdAt: serverTimestamp()
       });
 
-      // B. Actualizo el documento de la conversación (para que el cliente vea el texto rápido)
+      //  Actualizo el documento de la conversación (para que el cliente vea el texto rápido)
       const convRef = doc(db, 'conversaciones', conversacionId);
       await updateDoc(convRef, {
         ultimoMensaje: textoMensaje,
@@ -116,6 +121,45 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
     }
   };
 
+  //Funcion para enviar oferta de precio formal al cliente, solo se muestra si la solicitud esta aceptada y no hay oferta previa
+  const handleEnviarPrecio = async () => {
+    if (!montoPrecio || parseFloat(montoPrecio) <= 0) {
+      alert('Ingresa un monto válido');
+      return;
+    }
+
+    if (!confirm(`Enviar oferta de L. ${montoPrecio}?`)) return;
+
+    try {
+      setEnviandoPrecio(true);
+      
+      const monto = parseFloat(montoPrecio);
+      
+      // Calcular el desglose con la comisión del 15%
+      const desglose = calcularDesglosePago(monto);
+
+      // Actualizar la solicitud con la oferta
+      const solicitudRef = doc(db, 'solicitudes', solicitud.id);
+      await updateDoc(solicitudRef, {
+        oferta: {
+          monto: monto,
+          estado: 'pendiente_cliente', // Cliente debe aceptar
+          fechaEnviada: serverTimestamp(),
+          desglose: desglose // Guardar desglose completo
+        }
+      });
+
+      alert('Oferta enviada al cliente');
+      setMostrarFormPrecio(false);
+      setMontoPrecio('');
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al enviar oferta');
+    } finally {
+      setEnviandoPrecio(false);
+    }
+  };
+
   const formatearFecha = (timestamp) => {
     if (!timestamp) return '';
     try {
@@ -123,13 +167,18 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
     } catch { return ''; }
   };
 
+  //  Calcular desglose en tiempo real mientras el transportista escribe
+  const desglose = montoPrecio && parseFloat(montoPrecio) > 0
+    ? calcularDesglosePago(parseFloat(montoPrecio))
+    : null;
+
   // Pantalla de carga mientras se sincroniza el chat
   if (!conversacionId) {
     return (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-3xl p-10 max-w-sm text-center shadow-2xl border border-gray-100">
           <div className="h-8 w-8 border-2 border-black border-t-transparent animate-spin rounded-full mx-auto mb-4"></div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black">Sincronizando Chat</p>
+          <p className="text-xs font-black uppercase tracking-wide text-black">Sincronizando Chat</p>
         </div>
       </div>
     );
@@ -147,7 +196,7 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
               {solicitud.nombreUsuario?.charAt(0) || "C"}
             </div>
             <div>
-              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Chat con Cliente</p>
+              <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Chat con Cliente</p>
               <h3 className="font-black text-xl text-black tracking-tight leading-none">
                 {solicitud.nombreUsuario}
               </h3>
@@ -166,7 +215,7 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
           {mensajes.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full opacity-20">
               <span className="text-3xl mb-2">💬</span>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em]">Sin mensajes aún</p>
+              <p className="text-xs font-black uppercase tracking-wide">Sin mensajes aún</p>
             </div>
           ) : (
             mensajes.map((msg) => {
@@ -181,7 +230,7 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
                     }`}>
                       {msg.contenido}
                     </div>
-                    <p className="text-[9px] mt-1.5 font-bold text-gray-300 uppercase tracking-widest">
+                    <p className="text-xs mt-1.5 font-bold text-gray-300 uppercase tracking-widest">
                       {formatearFecha(msg.createdAt)}
                     </p>
                   </div>
@@ -190,6 +239,97 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
             })
           )}
           <div ref={messagesEndRef} />
+        </div>
+
+        {/* 
+             SECCIÓN: BOTÓN Y FORMULARIO DE PRECIO
+            Solo se muestra si la solicitud está "aceptada" y no hay oferta aún
+            */}
+        <div className="px-6 pb-2">
+          
+          {/* Si ya hay oferta pendiente - mostrar estado */}
+          {solicitud.oferta?.estado === 'pendiente_cliente' && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-2">
+              <p className="text-xs font-bold text-yellow-900">
+                Oferta enviada: L. {solicitud.oferta.monto}
+              </p>
+              <p className="text-xs text-yellow-700">
+                Esperando respuesta del cliente
+              </p>
+            </div>
+          )}
+
+          {/* Si no hay oferta y solicitud está aceptada - permitir enviar precio */}
+          {!solicitud.oferta && solicitud.estado === 'aceptada' && (
+            <>
+              {/* Mostrar botón para abrir formulario */}
+              {!mostrarFormPrecio ? (
+                <button
+                  onClick={() => setMostrarFormPrecio(true)}
+                  className="w-full bg-orange-600 text-white font-bold py-3 rounded-xl hover:bg-orange-700 transition-all mb-2"
+                >
+                  Enviar Precio Formal
+                </button>
+              ) : (
+                // Formulario para ingresar precio
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-2 space-y-3">
+                  <div>
+                    <label className="block text-sm font-bold text-orange-900 mb-2">
+                      Monto a cobrar:
+                    </label>
+                    <input
+                      type="number"
+                      value={montoPrecio}
+                      onChange={(e) => setMontoPrecio(e.target.value)}
+                      placeholder="Ej: 120"
+                      className="w-full px-4 py-2 border border-orange-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+
+                  {/* Mostrar desglose automático mientras escribe */}
+                  {desglose && (
+                    <div className="bg-white rounded-lg p-3 text-sm">
+                      <p className="font-bold text-slate-900 mb-2">Desglose:</p>
+                      <div className="space-y-1">
+                        <div className="flex justify-between">
+                          <span>Total:</span>
+                          <span className="font-bold">L. {desglose.montoPagado}</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-slate-500">
+                          <span>Comisión Fletia ({desglose.porcentajeComision}%):</span>
+                          <span>- L. {desglose.comisionFletia}</span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t">
+                          <span className="font-bold text-green-700">Recibirás:</span>
+                          <span className="font-bold text-green-700">L. {desglose.pagoTransportista}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Botones de acción */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setMostrarFormPrecio(false);
+                        setMontoPrecio('');
+                      }}
+                      className="flex-1 px-4 py-2 bg-slate-200 text-slate-900 font-bold rounded-lg hover:bg-slate-300"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleEnviarPrecio}
+                      disabled={!montoPrecio || enviandoPrecio}
+                      className="flex-1 px-4 py-2 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                    >
+                      {enviandoPrecio ? 'Enviando...' : 'Enviar'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Input Form - Minimalista */}
