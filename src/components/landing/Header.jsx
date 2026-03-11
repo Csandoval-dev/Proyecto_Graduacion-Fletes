@@ -1,10 +1,18 @@
-
-import { motion } from "framer-motion";
-import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Bloqueo de scroll cuando el menú está abierto para que se sienta como App real
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [isMenuOpen]);
 
   const menuItems = [
     { label: "Inicio", href: "#inicio" },
@@ -18,18 +26,18 @@ export const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           
-          {/* Logo */}
+          {/* Logo - Z-60 para que siempre esté al frente */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex items-center gap-2 cursor-pointer"
+            className="flex items-center gap-2 cursor-pointer z-[60]"
           >
             <div className="w-8 h-8 md:w-10 md:h-10 bg-black rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm md:text-base">F</span>
             </div>
             <span className="text-xl md:text-2xl font-bold text-black tracking-tight">
-              Fletia<span className="font-normal">HND</span>
+              Fletia<span className="font-normal">HND </span>
             </span>
           </motion.div>
 
@@ -52,78 +60,89 @@ export const Header = () => {
 
           {/* Botones Desktop */}
           <div className="hidden lg:flex items-center gap-3">
-            <Link to="/login">
-              <button className="px-5 py-2.5 text-sm font-medium text-black hover:bg-gray-100 rounded-lg transition-all duration-300">
-                Iniciar sesión
-              </button>
-            </Link>
-            <Link to="/register">
-              <button className="px-5 py-2.5 text-sm font-medium text-white bg-black hover:bg-gray-800 rounded-lg transition-all duration-300 shadow-sm">
-                Registrarse
-              </button>
-            </Link>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Link to="/login">
+                <button className="px-5 py-2.5 text-sm font-medium text-black hover:bg-gray-100 rounded-lg transition-all duration-300">
+                  Iniciar sesión
+                </button>
+              </Link>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <Link to="/register">
+                <button className="px-5 py-2.5 text-sm font-medium text-white bg-black hover:bg-gray-800 rounded-lg transition-all duration-300 shadow-sm">
+                  Registrarse
+                </button>
+              </Link>
+            </motion.div>
           </div>
 
-          {/* Hamburger Menu Mobile */}
+          {/* Hamburger Menu Mobile - FONDO NEGRO Y LÍNEAS BLANCAS */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-300"
-            aria-label="Abrir menú"
+            className="lg:hidden p-2.5 z-[60] bg-black rounded-lg transition-all duration-300 shadow-lg"
+            aria-label="Toggle menú"
           >
             <div className="w-6 h-5 flex flex-col justify-between">
-              <span className={`w-full h-0.5 bg-black transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
-              <span className={`w-full h-0.5 bg-black transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
-              <span className={`w-full h-0.5 bg-black transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+              <span className={`w-full h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+              <span className={`w-full h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
+              <span className={`w-full h-0.5 bg-white transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
             </div>
           </button>
         </div>
 
-        {/* Menu Mobile */}
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ 
-            height: isMenuOpen ? 'auto' : 0,
-            opacity: isMenuOpen ? 1 : 0
-          }}
-          transition={{ duration: 0.3 }}
-          className="lg:hidden overflow-hidden bg-white"
-        >
-          <div className="px-4 py-6 space-y-4 border-t border-gray-100">
-            {/* Enlaces de Navegación */}
-            <div className="flex flex-col space-y-2">
-              {menuItems.map((item, index) => (
-                <a
-                  key={index}
-                  href={item.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block py-3 text-lg font-medium text-gray-800 active:bg-gray-50 rounded-md transition-colors"
-                >
-                  {item.label}
-                </a>
-              ))}
-            </div>
+        {/* Menu Mobile FULL SCREEN */}
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, x: '100%' }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: '100%' }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white z-[50] lg:hidden flex flex-col justify-center px-6"
+            >
+              <div className="w-full space-y-12 text-center">
+                {/* Enlaces de Navegación */}
+                <div className="flex flex-col space-y-8">
+                  {menuItems.map((item, index) => (
+                    <motion.a
+                      key={index}
+                      href={item.href}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="text-3xl font-bold text-black tracking-tight"
+                    >
+                      {item.label}
+                    </motion.a>
+                  ))}
+                </div>
 
-            {/* Acciones de Usuario con Mejor Jerarquía */}
-            <div className="pt-4 flex flex-col gap-3 border-t border-gray-100">
-              <Link to="/login" className="w-full">
-                <button 
-                  onClick={() => setIsMenuOpen(false)}
-                  className="w-full py-3.5 text-base font-semibold text-black bg-white border border-gray-200 rounded-xl active:bg-gray-100 transition-all shadow-sm"
-                >
-                  Iniciar sesión
-                </button>
-              </Link>
-              <Link to="/register" className="w-full">
-                <button 
-                  onClick={() => setIsMenuOpen(false)}
-                  className="w-full py-3.5 text-base font-semibold text-white bg-black rounded-xl active:bg-gray-900 transition-all shadow-md"
-                >
-                  Registrarse
-                </button>
-              </Link>
-            </div>
-          </div>
-        </motion.div>
+                {/* Acciones de Usuario con Contraste Profesional */}
+                <div className="flex flex-col gap-4 pt-10 border-t border-gray-100">
+                  <Link to="/login" className="w-full" onClick={() => setIsMenuOpen(false)}>
+                    <button className="w-full py-4 text-lg font-bold text-black bg-white border-2 border-black rounded-2xl active:bg-gray-100 transition-all shadow-sm">
+                      Iniciar sesión
+                    </button>
+                  </Link>
+                  <Link to="/register" className="w-full" onClick={() => setIsMenuOpen(false)}>
+                    <button className="w-full py-4 text-lg font-bold text-white bg-black border-2 border-black rounded-2xl active:bg-gray-900 transition-all shadow-lg">
+                      Registrarse
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </nav>
   );
