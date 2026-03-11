@@ -23,7 +23,7 @@ export const ESTADOS_FLETE = {
     borderColor: "border-blue-200",
     icono: "",
     siguienteEstado: "pagado",
-    accionTransportista: null,
+    accionTransportista: "Aceptar esta solicitud",
     accionCliente: null,
     notificar: ["cliente"]
   },

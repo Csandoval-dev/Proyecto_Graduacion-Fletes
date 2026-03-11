@@ -362,7 +362,7 @@ exports.notificarNuevaSolicitud = onDocumentCreated(
     }
   }
 );
-
+//
 exports.notificarCambioEstado = onDocumentUpdated(
   "solicitudes/{solicitudId}",
   async (event) => {
