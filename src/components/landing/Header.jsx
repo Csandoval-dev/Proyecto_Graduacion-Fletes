@@ -1,4 +1,4 @@
-// src/components/landing/Header.jsx
+
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -29,7 +29,7 @@ export const Header = () => {
               <span className="text-white font-bold text-sm md:text-base">F</span>
             </div>
             <span className="text-xl md:text-2xl font-bold text-black tracking-tight">
-              Fletia<span className="font-normal">HND   </span>
+              Fletia<span className="font-normal">HND</span>
             </span>
           </motion.div>
 
@@ -52,28 +52,16 @@ export const Header = () => {
 
           {/* Botones Desktop */}
           <div className="hidden lg:flex items-center gap-3">
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Link to="/login">
-                <button className="px-5 py-2.5 text-sm font-medium text-black hover:bg-gray-100 rounded-lg transition-all duration-300">
-                  Iniciar sesión
-                </button>
-              </Link>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <Link to="/register">
-                <button className="px-5 py-2.5 text-sm font-medium text-white bg-black hover:bg-gray-800 rounded-lg transition-all duration-300 shadow-sm">
-                  Registrarse
-                </button>
-              </Link>
-            </motion.div>
+            <Link to="/login">
+              <button className="px-5 py-2.5 text-sm font-medium text-black hover:bg-gray-100 rounded-lg transition-all duration-300">
+                Iniciar sesión
+              </button>
+            </Link>
+            <Link to="/register">
+              <button className="px-5 py-2.5 text-sm font-medium text-white bg-black hover:bg-gray-800 rounded-lg transition-all duration-300 shadow-sm">
+                Registrarse
+              </button>
+            </Link>
           </div>
 
           {/* Hamburger Menu Mobile */}
@@ -98,32 +86,37 @@ export const Header = () => {
             opacity: isMenuOpen ? 1 : 0
           }}
           transition={{ duration: 0.3 }}
-          className="lg:hidden overflow-hidden"
+          className="lg:hidden overflow-hidden bg-white"
         >
-          <div className="py-4 space-y-3 border-t border-gray-200">
-            {menuItems.map((item, index) => (
-              <motion.a
-                key={index}
-                href={item.href}
-                onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-black rounded-lg transition-all duration-300"
-              >
-                {item.label}
-              </motion.a>
-            ))}
-            <div className="pt-3 space-y-2 border-t border-gray-200">
-              <Link to="/login">
+          <div className="px-4 py-6 space-y-4 border-t border-gray-100">
+            {/* Enlaces de Navegación */}
+            <div className="flex flex-col space-y-2">
+              {menuItems.map((item, index) => (
+                <a
+                  key={index}
+                  href={item.href}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block py-3 text-lg font-medium text-gray-800 active:bg-gray-50 rounded-md transition-colors"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
+
+            {/* Acciones de Usuario con Mejor Jerarquía */}
+            <div className="pt-4 flex flex-col gap-3 border-t border-gray-100">
+              <Link to="/login" className="w-full">
                 <button 
                   onClick={() => setIsMenuOpen(false)}
-                  className="w-full px-4 py-2.5 text-base font-medium text-black hover:bg-gray-100 rounded-lg transition-all duration-300"
+                  className="w-full py-3.5 text-base font-semibold text-black bg-white border border-gray-200 rounded-xl active:bg-gray-100 transition-all shadow-sm"
                 >
                   Iniciar sesión
                 </button>
               </Link>
-              <Link to="/register">
+              <Link to="/register" className="w-full">
                 <button 
                   onClick={() => setIsMenuOpen(false)}
-                  className="w-full px-4 py-2.5 text-base font-medium text-white bg-black hover:bg-gray-800 rounded-lg transition-all duration-300"
+                  className="w-full py-3.5 text-base font-semibold text-white bg-black rounded-xl active:bg-gray-900 transition-all shadow-md"
                 >
                   Registrarse
                 </button>
