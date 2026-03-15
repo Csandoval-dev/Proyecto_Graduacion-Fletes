@@ -1,8 +1,8 @@
-// src/pages/Dashboardtransportista/Dashboardtransportista.jsx
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, updateDoc, onSnapshot } from "firebase/firestore";
 import { auth, db } from "../../firebase/firebase";
 import { cerrarSesion } from "../../services/authService";
 import SolicitudesTransportista from "./components/SolicitudesTransportista";
@@ -50,7 +50,7 @@ function DashboardTransportista() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("inicio");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
+//Funcion para cargar el perfil del transportista al iniciar el componenete, verificando si el usuario esta autenticado,
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -112,7 +112,7 @@ function DashboardTransportista() {
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       
-      {/* ========== SIDEBAR ========== */}
+      {/*  SIDEBAR  */}
       <aside 
         className={`
           fixed lg:static inset-y-0 left-0 z-50
@@ -209,15 +209,19 @@ function DashboardTransportista() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-              {activeTab === "inicio" && <VistaInicio perfil={perfil} navigate={navigate} />}
-              {activeTab === "solicitudes" && <SolicitudesTransportista usuario={perfil} />}
-              {activeTab === "perfil" && <VistaPerfil perfil={perfil} navigate={navigate} />}
-            </div>
-          </div>
-        </div>
+       <div className="flex-1 overflow-y-auto">
+  {activeTab === 'solicitudes' ? (
+    // Sin padding ni max-width para que SolicitudesTransportista ocupe todo
+    <SolicitudesTransportista usuario={perfil} />
+  ) : (
+    <div className="p-4 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        {activeTab === 'inicio' && <VistaInicio perfil={perfil} navigate={navigate} />}
+        {activeTab === 'perfil' && <VistaPerfil perfil={perfil} navigate={navigate} />}
+      </div>
+    </div>
+  )}
+</div>
       </main>
     </div>
   );
@@ -255,11 +259,78 @@ function VistaInicio({ perfil }) {
   );
 }
 
-// Vista Perfil
-function VistaPerfil({ perfil, navigate }) {
+// Vista Perfil -  con campo de mensaje personalizado
+function VistaPerfil({ perfil }) {
+  const [mensajePersonalizado, setMensajePersonalizado] = useState('');
+  const [guardando, setGuardando] = useState(false);
+  const [mensaje, setMensaje] = useState(null);
+  const [editandoMensaje, setEditandoMensaje] = useState(false);
+
+  // Cargar mensaje personalizado existente
+  useEffect(() => {
+    if (!perfil?.uid) return;
+    const userRef = doc(db, 'usuarios', perfil.uid);
+    const unsubscribe = onSnapshot(userRef, (docSnap) => {
+      if (docSnap.exists() && docSnap.data().mensajePersonalizado) {
+        setMensajePersonalizado(docSnap.data().mensajePersonalizado);
+        setEditandoMensaje(false);
+      } else {
+        setMensajePersonalizado('');
+        setEditandoMensaje(true);
+      }
+    }, (error) => {
+      console.error('Error escuchando mensaje:', error);
+    });
+    return () => unsubscribe();
+  }, [perfil?.uid]);
+
+  // Detectar cambios para activar modo edición automáticamente
+  useEffect(() => {
+    if (perfil?.mensajePersonalizado && mensajePersonalizado !== perfil.mensajePersonalizado) {
+      setEditandoMensaje(true);
+    }
+  }, [mensajePersonalizado, perfil?.mensajePersonalizado]);
+
+  // Guardar mensaje personalizado en Firebase
+  const handleGuardarMensaje = async () => {
+    if (!mensajePersonalizado.trim()) {
+      alert('Escribe un mensaje antes de guardar');
+      return;
+    }
+
+    try {
+      setGuardando(true);
+      
+      // Actualizar en Firebase
+      const userRef = doc(db, 'usuarios', perfil.uid);
+      await updateDoc(userRef, {
+        mensajePersonalizado: mensajePersonalizado.trim()
+      });
+
+      setMensaje({ tipo: 'exito', texto: 'Mensaje guardado correctamente' });
+      setTimeout(() => setMensaje(null), 3000);
+      setEditandoMensaje(false);
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      setMensaje({ tipo: 'error', texto: 'Error al guardar el mensaje' });
+    } finally {
+      setGuardando(false);
+    }
+  };
+//Activar el modo edicion.
+  const handleEditarMensaje = () => {
+    setEditandoMensaje(true);
+    
+  };
+//Funcion eliminar el mensaje pesonalizado
+
   return (
     <div className="space-y-6">
+      
+      {/* Información Personal */}
       <div className="bg-white rounded-xl border border-slate-200 p-8">
+        <h3 className="text-lg font-bold text-slate-900 mb-6">Información Personal</h3>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <p className="text-sm font-bold text-slate-500 uppercase mb-2">Nombre</p>
@@ -269,21 +340,71 @@ function VistaPerfil({ perfil, navigate }) {
             <p className="text-sm font-bold text-slate-500 uppercase mb-2">Email</p>
             <p className="text-lg font-bold text-slate-900">{perfil?.email}</p>
           </div>
-          <div>
-            <p className="text-sm font-bold text-slate-500 uppercase mb-2">Teléfono</p>
-            <p className="text-lg font-bold text-slate-900">{perfil?.telefono || 'No registrado'}</p>
-          </div>
+        
           <div>
             <p className="text-sm font-bold text-slate-500 uppercase mb-2">Zona</p>
             <p className="text-lg font-bold text-slate-900">{perfil?.zona || 'No especificada'}</p>
           </div>
         </div>
-        <div className="mt-8 pt-6 border-t">
+      </div>
+
+      {/*  Mensaje Personalizado para Clientes
+          */}
+      <div className="bg-white rounded-xl border border-slate-200 p-8">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">Mensaje Personalizado para Clientes</h3>
+            <p className="text-sm text-slate-600 mt-1">
+              Este mensaje aparecerá como respuesta rápida en tus chats
+            </p>
+          </div>
+        </div>
+
+        {/* Textarea para escribir el mensaje */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">
+              Tu mensaje de presentación:
+            </label>
+            <textarea
+              value={mensajePersonalizado}
+              onChange={(e) => setMensajePersonalizado(e.target.value)}
+              placeholder="Ejemplo: Hola, gracias por contactarme. Ofrezco servicio de transporte con carga y descarga incluida. Cuento con seguro de mercancía y amplia experiencia en la zona..."
+              className="w-full px-4 py-3 border-2 border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent resize-none text-sm"
+              rows="6"
+              maxLength="500"
+              disabled={!editandoMensaje}
+            />
+            <div className="flex justify-between items-center mt-2">
+              <p className="text-xs text-slate-500">
+                {mensajePersonalizado.length}/500 caracteres
+              </p>
+              {mensajePersonalizado.length > 450 && (
+                <p className="text-xs text-orange-600 font-bold">
+                  Cerca del límite
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Mensaje de confirmación */}
+          {mensaje && (
+            <div className={`rounded-lg p-4 ${
+              mensaje.tipo === 'exito' 
+                ? 'bg-green-50 border border-green-200 text-green-800' 
+                : 'bg-red-50 border border-red-200 text-red-800'
+            }`}>
+              <p className="text-sm font-bold">{mensaje.texto}</p>
+            </div>
+          )}
+
+          {/* Botón guardar/editar */}
           <button
-            onClick={() => navigate("/perfil-transportista")}
-            className="px-8 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all"
+            onClick={editandoMensaje ? handleGuardarMensaje : handleEditarMensaje}
+            disabled={guardando || (!editandoMensaje && !mensajePersonalizado.trim())}
+            className="w-full px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Editar Perfil
+            {guardando ? 'Guardando...' : (editandoMensaje ? 'Guardar Mensaje' : 'Editar Mensaje')}
           </button>
         </div>
       </div>

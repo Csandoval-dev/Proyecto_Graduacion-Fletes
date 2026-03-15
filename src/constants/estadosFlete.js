@@ -1,4 +1,5 @@
 
+//Contantes que definen los estados de un flete, con sus respectivas propiedades
 export const ESTADOS_FLETE = {
   pendiente: {
     label: "Pendiente",
@@ -70,9 +71,8 @@ export const ESTADOS_FLETE = {
     notificar: ["cliente"]
   },
   
-  // ==========================================
-  // MODIFICADO: Ahora el CLIENTE finaliza
-  // ==========================================
+   
+  // Ahora el CLIENTE finaliza
   entregado: {
     label: "Entregado",
     descripcion: "La carga fue entregada",
@@ -82,8 +82,8 @@ export const ESTADOS_FLETE = {
     borderColor: "border-green-200",
     icono: "",
     siguienteEstado: "finalizado",
-    accionTransportista: null, // CAMBIO: Transportista ya no puede finalizar
-    accionCliente: "Confirmar y Calificar", // CAMBIO: Cliente finaliza con calificación
+    accionTransportista: null, //  Transportista  no puede finalizar
+    accionCliente: "Confirmar y Calificar", //  Cliente finaliza con calificación
     notificar: ["cliente"]
   },
   

@@ -1,9 +1,9 @@
-// src/pages/DashboardCliente/components/ModalSolicitud.jsx
 import { useState } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../firebase/firebase';
 import MapSelector from '../../../components/MapSelector';
 
+//Iconoes SVG para el modal
 const IconX = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -16,10 +16,10 @@ const IconMap = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
   </svg>
 );
-
+//Configuracion del icono del marcador para el mapa
 function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) {
   const [loading, setLoading] = useState(false);
-  const [paso, setPaso] = useState(1); // 1: origen, 2: destino, 3: detalles
+  const [paso, setPaso] = useState(1);
   
   const [origen, setOrigen] = useState(null);
   const [origenTexto, setOrigenTexto] = useState('');
@@ -35,7 +35,7 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
   // Calcular distancia aproximada entre dos puntos usando fórmula Haversine 
   const calcularDistancia = (origen, destino) => {
     if (!origen || !destino) return 0;
-    const R = 6371; // Radio de la Tierra en km
+    const R = 6371;
     const dLat = (destino.lat - origen.lat) * Math.PI / 180;
     const dLon = (destino.lng - origen.lng) * Math.PI / 180;
     const a = 
@@ -45,7 +45,7 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c;
   };
-
+// Configuracion del icono del marcador para el mapa
   const handleCrearSolicitud = async () => {
     if (!origenTexto || !destinoTexto || !descripcionCarga || !fechaSolicitada) {
       alert('Por favor completa todos los campos');
@@ -57,26 +57,20 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
 
       const distanciaKm = origen && destino ? calcularDistancia(origen, destino) : 0;
 
-      // Crear objeto de origen con dirección y coordenadas (si existen)
       const origenData = {
         direccion: origenTexto,
         ...(origen && { lat: origen.lat, lng: origen.lng })
       };
 
-      // Crear objeto de destino con dirección y coordenadas (si existen)
       const destinoData = {
         direccion: destinoTexto,
         ...(destino && { lat: destino.lat, lng: destino.lng })
       };
 
-      // ==========================================
-      // CREAR SOLICITUD CON CAMPOS DE PAGO
-      // AGREGADO DEL PRIMER CÓDIGO
-      // ==========================================
+      // Crear solicitud
       const solicitudRef = await addDoc(collection(db, 'solicitudes'), {
         usuarioId: usuario.uid,
         nombreUsuario: usuario.nombre,
-        // Usamos usuarioId el UID de Auth no el ID del documento
         transportistaId: transportista.usuarioId, 
         nombreTransportista: transportista.nombre,
         origen: origenData,
@@ -85,21 +79,18 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
         descripcionCarga,
         tipoVehiculo: transportista?.vehiculo?.tipo || 'No especificado',
         fechaSolicitada: new Date(fechaSolicitada),
-        
-        // NUEVOS CAMPOS AGREGADOS PARA SISTEMA DE PAGOS
-        // Se llenarán durante la negociación en el chat
-        precioAcordado: null,  // Se llenará cuando el cliente acepte la oferta
-        oferta: null,          // Se llenará cuando el transportista envíe precio
-        pagado: false,         // Inicia como false, cambia a true después del pago
-        
+        precioAcordado: null,
+        oferta: null,
+        pagado: false,
         estado: 'pendiente',
         createdAt: serverTimestamp()
       });
 
-      // Crear conversación usando los mismos UIDs
-      await addDoc(collection(db, 'conversaciones'), {
+      
+      // CREAR CONVERSACIÓN
+    
+      const conversacionRef = await addDoc(collection(db, 'conversaciones'), {
         solicitudId: solicitudRef.id,
-        // Los participantes deben ser UIDs de Authentication
         participantes: [usuario.uid, transportista.usuarioId],
         nombreCliente: usuario.nombre,
         nombreTransportista: transportista.nombre,
@@ -107,6 +98,39 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
         ultimoMensajeTimestamp: serverTimestamp(),
         createdAt: serverTimestamp()
       });
+
+      
+      // N MENSAJE INICIAL AUTOMÁTICO
+      
+      
+      try {
+        const transportistaRef = doc(db, 'usuarios', transportista.usuarioId);
+        const transportistaSnap = await getDoc(transportistaRef);
+        
+        if (transportistaSnap.exists()) {
+          const mensajePersonalizado = transportistaSnap.data()?.mensajePersonalizado;
+          
+          // Si el transportista configuró un mensaje, crearlo automáticamente
+          if (mensajePersonalizado && mensajePersonalizado.trim()) {
+            await addDoc(collection(db, `conversaciones/${conversacionRef.id}/mensajes`), {
+              emisorId: transportista.usuarioId,
+              nombreEmisor: transportista.nombre,
+              contenido: mensajePersonalizado,
+              leido: false,
+              createdAt: serverTimestamp()
+            });
+
+            // Actualizar ultimoMensaje de la conversación
+            await updateDoc(doc(db, 'conversaciones', conversacionRef.id), {
+              ultimoMensaje: mensajePersonalizado.substring(0, 100),
+              ultimoMensajeTimestamp: serverTimestamp()
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error al crear mensaje inicial:', error);
+        // No detener el flujo si falla esto
+      }
 
       alert('Solicitud enviada correctamente');
       onSuccess && onSuccess(solicitudRef.id);
@@ -230,7 +254,7 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
             <div className="space-y-6">
               <h3 className="text-lg font-bold text-slate-900">Detalles del flete</h3>
 
-              {/* Resumen de ubicaciones - SIN EMOJIS */}
+              {/* Resumen de ubicaciones */}
               <div className="bg-slate-50 p-4 rounded-lg space-y-2">
                 <div className="flex items-start gap-2">
                   <span className="text-green-600 font-bold">A</span>

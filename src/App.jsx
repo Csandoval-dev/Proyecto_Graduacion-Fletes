@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth"; 
 import { auth } from "./firebase/firebase"; 
 import React, { useEffect, useRef } from 'react'; 
-
 // Configuración de Cloud Messaging
 import { solicitarPermisoNotificaciones, escucharNotificaciones } from './services/notificacionesService';
 import Landing from "./pages/landing/Landing";

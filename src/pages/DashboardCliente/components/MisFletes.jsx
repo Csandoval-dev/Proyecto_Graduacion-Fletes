@@ -1,4 +1,4 @@
-// src/pages/DashboardCliente/components/MisFletes.jsx
+
 import { useState, useEffect } from "react";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
@@ -6,7 +6,7 @@ import MapaRuta from "../../../components/MapaRuta";
 import { getEstadoInfo } from "../../../constants/estadosFlete";
 import ModalCalificacion from "../../../components/ModalCalificacion";
 
-
+//Iconos SVG
 const IconTruck = () => (
   <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
     <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
@@ -19,7 +19,7 @@ const IconX = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
   </svg>
 );
-
+// Componenete principal para mostrar los fletes del cleinte
 function MisFletes({ usuario }) {
   const [solicitudes, setSolicitudes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,17 +27,17 @@ function MisFletes({ usuario }) {
   const [detalleAbierto, setDetalleAbierto] = useState(null);
 
   const [calificacionAbierta, setCalificacionAbierta] = useState(null);
-
+//Cargar las solicitudes del cleinte desde firebase
   useEffect(() => {
     if (usuario?.uid) {
       cargarSolicitudes();
     }
   }, [usuario, filtro]);
-
+//Fncion para cargar las solicitudes del cliente desde firebase
   const cargarSolicitudes = async () => {
     try {
       setLoading(true);
-      
+
       let q;
       if (filtro === 'activos') {
         q = query(
@@ -73,22 +73,21 @@ function MisFletes({ usuario }) {
     setDetalleAbierto(solicitud);
   };
 
-  // ==========================================
-  // NUEVO: Función para abrir modal de calificación
-  // ==========================================
+  
+  // Función para abrir modal de calificación
+  
   const abrirCalificacion = (solicitud) => {
     setCalificacionAbierta(solicitud);
     setDetalleAbierto(null); // Cerrar modal de detalle
   };
-
-  // ==========================================
-  // NUEVO: Callback después de calificar
-  // ==========================================
+  
+  // Callback después de calificar
+  
   const handleCalificacionExitosa = () => {
     setCalificacionAbierta(null);
     cargarSolicitudes(); // Recargar lista
   };
-
+//Base de datos de preguntas frecuentes para el chatbot
   const formatearFecha = (timestamp) => {
     if (!timestamp) return "";
     try {
@@ -214,16 +213,16 @@ function MisFletes({ usuario }) {
           solicitud={detalleAbierto}
           usuario={usuario}
           onClose={() => setDetalleAbierto(null)}
-          // ==========================================
-          // NUEVO: Pasar función para abrir calificación
-          // ==========================================
+          // 
+          // función para abrir calificación
+        
           onAbrirCalificacion={abrirCalificacion}
         />
       )}
 
-      {/* ==========================================
-          NUEVO: Modal de Calificación
-          ========================================== */}
+      {/*
+         Modal de Calificación
+          */}
       {calificacionAbierta && (
         <ModalCalificacion
           solicitud={calificacionAbierta}
@@ -235,7 +234,7 @@ function MisFletes({ usuario }) {
   );
 }
 
-// ========== MODAL CON PESTAÑAS ==========
+// MODAL CON PESTAÑAS
 function ModalDetalle({ solicitud, usuario, onClose, onAbrirCalificacion }) {
   const [pestanaActiva, setPestanaActiva] = useState('seguimiento');
   const [conversacionId, setConversacionId] = useState(null);
@@ -302,7 +301,7 @@ function ModalDetalle({ solicitud, usuario, onClose, onAbrirCalificacion }) {
               />
 
               {/* ==========================================
-                  NUEVO: Banner de estado "entregado"
+                   Banner de estado "entregado"
                   ========================================== */}
               {solicitud.estado === 'entregado' && (
                 <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6">

@@ -1,4 +1,4 @@
-// src/components/ProcesarPagoStripe.jsx
+
 import { useState, useEffect } from 'react';
 import {
   CardElement,
@@ -27,14 +27,14 @@ const CARD_ELEMENT_OPTIONS = {
   hidePostalCode: true, // Ocultar código postal
 };
 
-
+// Funcio para renderizar el formulario de pago, manejando la logica de procesamiento con Stripe.
 function FormularioPago({ solicitud, montoUSD, clientSecret, onExito }) {
   const stripe = useStripe();
   const elements = useElements();
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState(null);
   const [cardCompleta, setCardCompleta] = useState(false);
-
+//Manejas el envio del formulario, confirmando el pago con stripe y manejando errorre o exitosamente.
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -124,11 +124,13 @@ function FormularioPago({ solicitud, montoUSD, clientSecret, onExito }) {
       <p className="text-xs text-center text-slate-500">
         Pago seguro procesado por Stripe
       </p>
+      {/* checkbox*/}
+     
     </form>
   );
 }
 
-
+// Componente principal para manejar el proceso de pago con Stipe, incluyendo la comunicacion con el backend/
 function ProcesarPagoStripe({ solicitud, onExito, onCancelar }) {
   const [clientSecret, setClientSecret] = useState(null);
   const [cargando, setCargando] = useState(true);

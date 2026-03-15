@@ -12,6 +12,7 @@ import { ComoFunciona } from "../../components/landing/ComoFunciona";
 import { CarouselVisual } from "../../components/landing/CarouselVisual";
 import { Beneficios } from "../../components/landing/Beneficios";
 import { Footer } from "../../components/landing/Footer";
+import ChatBot from "../../components/ChatBot";
 
 function Landing() {
   const navigate = useNavigate();
@@ -62,11 +63,15 @@ function Landing() {
         
         {/* Sección Beneficios */}
         <Beneficios />
+       
       </main>
 
       {/* Footer */}
       <Footer />
 
+     
+  {/*  ChatBot*/}
+      <ChatBot/>
       {/* Botón flotante opcional (WhatsApp o soporte) */}
       
     </div>

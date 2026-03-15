@@ -1,4 +1,4 @@
-// src/components/MapaRuta.jsx
+
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import { useEffect } from 'react';
 import L from 'leaflet';

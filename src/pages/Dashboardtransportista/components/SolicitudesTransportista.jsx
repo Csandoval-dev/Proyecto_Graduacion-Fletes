@@ -1,374 +1,470 @@
 import { useState, useEffect } from 'react';
-import { 
-  collection, query, where, doc, updateDoc, 
-  orderBy, arrayUnion, onSnapshot 
+import {
+  collection, query, where, doc, updateDoc,
+  orderBy, arrayUnion, onSnapshot
 } from 'firebase/firestore';
 import { db } from '../../../firebase/firebase';
 import ChatTransportista from './ChatTransportista';
 import MapaRuta from '../../../components/MapaRuta';
-import { ESTADOS_FLETE, getEstadoInfo } from '../../../constants/estadosFlete';
+import { getEstadoInfo } from '../../../constants/estadosFlete';
 
-//Componente principal de la seccion de solicitudes del transportista
+// Colores y estilos para estados 
+const ESTADO_HEX = {
+  pendiente:  { dot: '#f59e0b', bg: '#fffbeb', text: '#92400e', border: '#fde68a', strip: '#f59e0b' },
+  aceptada:   { dot: '#3b82f6', bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe', strip: '#3b82f6' },
+  pagado:     { dot: '#10b981', bg: '#f0fdf4', text: '#065f46', border: '#a7f3d0', strip: '#10b981' },
+  en_camino:  { dot: '#8b5cf6', bg: '#f5f3ff', text: '#4c1d95', border: '#ddd6fe', strip: '#8b5cf6' },
+  recogido:   { dot: '#f97316', bg: '#fff7ed', text: '#9a3412', border: '#fed7aa', strip: '#f97316' },
+  entregado:  { dot: '#06b6d4', bg: '#ecfeff', text: '#164e63', border: '#a5f3fc', strip: '#06b6d4' },
+  finalizado: { dot: '#9ca3af', bg: '#f9fafb', text: '#374151', border: '#e5e7eb', strip: '#9ca3af' },
+  cancelado:  { dot: '#ef4444', bg: '#fef2f2', text: '#991b1b', border: '#fecaca', strip: '#ef4444' },
+};
+//Colores para baners informativos
+const BANNER_HEX = {
+  yellow: { bg: '#fffbeb', border: '#fcd34d', text: '#92400e', bar: '#f59e0b' },
+  blue:   { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af', bar: '#3b82f6' },
+  green:  { bg: '#f0fdf4', border: '#6ee7b7', text: '#065f46', bar: '#10b981' },
+  purple: { bg: '#f5f3ff', border: '#c4b5fd', text: '#4c1d95', bar: '#8b5cf6' },
+  orange: { bg: '#fff7ed', border: '#fed7aa', text: '#9a3412', bar: '#f97316' },
+  gray:   { bg: '#f9fafb', border: '#e5e7eb', text: '#374151', bar: '#9ca3af' },
+  red:    { bg: '#fef2f2', border: '#fecaca', text: '#991b1b', bar: '#ef4444' },
+};
+// Componente para mostrar el estado del flete y su descripcion en un badge, y un banner informativo con detalles adicionales.
+function EstadoBadge({ estado }) {
+  const info = getEstadoInfo(estado);
+  const h    = ESTADO_HEX[estado] || ESTADO_HEX.finalizado;
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide whitespace-nowrap flex-shrink-0"
+      style={{ background: h.bg, color: h.text, border: `1.5px solid ${h.border}` }}
+    >
+      <span
+        className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+        style={{ background: h.dot, boxShadow: `0 0 0 2px ${h.dot}33` }}
+      />
+      {info.label}
+    </span>
+  );
+}
+// Banner informativo que muestra el estado actual del flete con un mensaje descriptivo y recomendaciones para el transportista.
+function BannerEstado({ estado, title, children }) {
+  const info = getEstadoInfo(estado);
+  const c    = BANNER_HEX[info.color] || BANNER_HEX.gray;
+  return (
+    <div
+      className="rounded-xl p-4 leading-relaxed"
+      style={{
+        background:  c.bg,
+        border:      `1px solid ${c.border}`,
+        borderLeft:  `4px solid ${c.bar}`,
+        color:       c.text,
+      }}
+    >
+      {title && <p className="font-bold text-[13px] mb-1 m-0">{title}</p>}
+      <p className="m-0 text-xs opacity-80">{children}</p>
+    </div>
+  );
+}
+//Tarjeta para mostrar estadisticas clave del flete ,  como distancia, fecaha y descripcion breve.
+function StatCard({ label, value }) {
+  return (
+    <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-200">
+      <p className="m-0 mb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
+      <p className="m-0 text-sm font-bold text-slate-900 capitalize">{value}</p>
+    </div>
+  );
+}
+//Componenete pirncipal que muestra la lista de solicitudes del transportista,
 function SolicitudesTransportista({ usuario }) {
-  const [solicitudes, setSolicitudes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filtro, setFiltro] = useState('pendiente');
-  const [chatAbierto, setChatAbierto] = useState(null);
-  const [detalleAbierto, setDetalleAbierto] = useState(null);
+  const [solicitudes, setSolicitudes]   = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [seleccionada, setSeleccionada] = useState(null);
+  const [vistaChat, setVistaChat]       = useState(false);
 
-//Escuchar SOlicitu en tiempor real 
+  //Funcion para obtener solicitudes del trasnportista en tiempo real, ordenadas por fecha de creacion y actualizando la solicitud seleccionada si esta cambia de estado.
   useEffect(() => {
     if (!usuario?.uid) return;
     setLoading(true);
-
-    //contruir consulta con filtro dinamico
-    let q;
-    if (filtro === 'todas') {
-      q = query(
-        collection(db, 'solicitudes'),
-        where('transportistaId', '==', usuario.uid),
-        orderBy('createdAt', 'desc')
-      );
-    } else {
-      q = query(
-        collection(db, 'solicitudes'),
-        where('transportistaId', '==', usuario.uid),
-        where('estado', '==', filtro),
-        orderBy('createdAt', 'desc')
-      );
-    }
-
-    // Escuchar cambios en tiempo real
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const lista = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    const q = query(
+      collection(db, 'solicitudes'),
+      where('transportistaId', '==', usuario.uid),
+      orderBy('createdAt', 'desc')
+    );
+    //Escucha en tiempo real los cambios en las solicitudes del transportista y actualiza la lista y a solicitud seleccionada si esta cambia de estado.
+    const unsub = onSnapshot(q, (snap) => {
+      const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setSolicitudes(lista);
       setLoading(false);
-
-      // Mantener el detalle actualizado si está abierto
-      setDetalleAbierto(prev => {
-        if (!prev) return null;
-        return lista.find(s => s.id === prev.id) || prev;
-      });
-    }, (error) => {
-      console.error('Error al escuchar solicitudes:', error);
+      setSeleccionada(prev => prev ? lista.find(s => s.id === prev.id) || prev : null);
+    }, (err) => {
+      console.error('Error:', err);
       setLoading(false);
     });
+    return () => unsub();
+  }, [usuario]);
 
-    return () => unsubscribe();
-  }, [usuario, filtro]);
-
-  // Función para cambiar estado de la solicitud
-  const cambiarEstado = async (solicitudId, nuevoEstado) => {
-    const estadoInfo = getEstadoInfo(nuevoEstado);
-    
-    if (!confirm(`${estadoInfo.accionTransportista}?`)) return;
-    
+  //Funcion para cambiar el estado de una solicitud actualizado la base de datos y agreando una entrada al historial de estados de la solicitud con la descripcion del nuevo estado.
+  const cambiarEstado = async (solicitudId, nuevoEstado, textoConfirm) => {
+    if (!confirm(`${textoConfirm}?`)) return;
     try {
+      const infoNuevo = getEstadoInfo(nuevoEstado); // solo para descripción del historial
       await updateDoc(doc(db, 'solicitudes', solicitudId), {
         estado: nuevoEstado,
         historial: arrayUnion({
           estado: nuevoEstado,
           fecha: new Date(),
-          descripcion: estadoInfo.descripcion
-        })
+          descripcion: infoNuevo.descripcion,
+        }),
       });
-      //Si el detalle de la solicitud se acaba de abrir, se cierra para evitar mostrar informacion desactualizada
-      setDetalleAbierto(null);
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (err) {
+      console.error('Error:', err);
       alert('Error al cambiar estado');
     }
   };
+// Varibales derivadas para facilita la lectura y el manejo de solicitudes y sus eatdos, como la solicitud seleccionada,
+  const sol             = seleccionada
+    ? (solicitudes.find(s => s.id === seleccionada.id) || seleccionada)
+    : null;
+  const estadoInfo      = sol ? getEstadoInfo(sol.estado) : null;
+  const siguienteEstado = estadoInfo?.siguienteEstado;
+  const esperandoPago   = sol?.oferta?.estado === 'pendiente_cliente';
 
-  // Funcion para abrir el chat de la solicitud
-  const abrirChat = (solicitud) => {
-    setChatAbierto(solicitud);
+  //  Variable clara con la acción del transportista
+  const accionTransportista = estadoInfo?.accionTransportista;
+
+  //  mostrarBoton respeta accionTransportista null  
+  const mostrarBoton =
+    !!siguienteEstado &&
+    !!accionTransportista &&
+    sol?.estado !== 'entregado'; // entregado le toca al cliente
+
+  //  puedeAccionar cubre todos los estados correctamente
+  const puedeAccionar = () => {
+    if (!sol) return false;
+    if (sol.estado === 'pendiente') return true;
+    if (sol.estado === 'aceptada')  return false; // espera que el cliente pague
+    if (sol.estado === 'pagado')    return sol.pagado === true;
+    if (sol.estado === 'entregado') return false; // solo el cliente confirma
+    return !!accionTransportista;  // en_camino, recogido → true si tienen acción
   };
-// FUncion para abrir el modal de detalle de la solicitud
-  const verDetalle = (solicitud) => {
-    setDetalleAbierto(solicitud);
+//FUncion para renderizar el banner informativo basado en el estado actual de la solicitud seleccionada, mostrando un mensaje descriptivo y recomendacion para el transportista.
+  const renderBanner = () => {
+    if (!sol) return null;
+    const banners = {
+      pendiente: { title: 'Solicitud pendiente',        msg: 'Acepta la solicitud para iniciar la negociación con el cliente.' },
+      aceptada:  {
+        title: esperandoPago ? 'Esperando pago del cliente' : 'Solicitud aceptada',
+        msg:   esperandoPago
+          ? `Oferta enviada: L. ${sol.oferta?.monto} — esperando que el cliente confirme el pago.`
+          : 'Usa el chat para enviarle tu oferta de precio al cliente.',
+      },
+      pagado: sol?.pagado ? {
+        title: 'Pago confirmado — puedes iniciar el servicio',
+        msg:   sol.oferta?.desglose
+          ? `Recibirás: L. ${sol.oferta.desglose.pagoTransportista}`
+          : `Monto: L. ${sol.pago?.montoPagado || sol.precioAcordado || '—'}`,
+      } : null,
+      en_camino:  { title: 'En camino',             msg: 'Dirígete al punto de origen para recoger la carga.' },
+      recogido:   { title: 'Carga recogida',         msg: 'Lleva la carga al destino y márcala como entregada.' },
+      entregado:  { title: 'Esperando confirmación', msg: 'El cliente debe confirmar la entrega y calificar el servicio para finalizar.' },
+      finalizado: { title: 'Servicio finalizado',    msg: 'Este flete ha sido completado exitosamente.' },
+    };
+    const b = banners[sol.estado];
+    if (!b) return null;
+    return <BannerEstado estado={sol.estado} title={b.title}>{b.msg}</BannerEstado>;
   };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-600 border-t-transparent"></div>
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <div
+          className="w-8 h-8 rounded-full border-2 border-orange-100 border-t-orange-600"
+          style={{ animation: 'spin .75s linear infinite' }}
+        />
+        <span className="text-sm text-slate-400 font-medium">Cargando solicitudes…</span>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
   }
-
+//Renderizado principal del componenete, mostrando la lista de solicitudes del tranportista en una barra lateral
   return (
-    <div className="space-y-6">
-      
-      <div>
-        <p className="text-slate-600 mt-1">Gestiona las solicitudes de flete</p>
-      </div>
+    <div className="flex flex-col h-full">
+      <style>{`
+        @keyframes spin   { to { transform: rotate(360deg); } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+        .ft-fadein { animation: fadeUp .2s ease both; }
 
-      {/* Filtros - AGREGADO: filtro "pagado" del primer código */}
-      <div className="flex gap-2 flex-wrap">
-        {['pendiente', 'aceptada', 'pagado', 'en_camino', 'recogido', 'entregado', 'finalizado', 'todas'].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFiltro(f)}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-              filtro === f
-                ? 'bg-orange-600 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            {f === 'todas' ? 'Todas' : getEstadoInfo(f).label}
-          </button>
-        ))}
-      </div>
+        .ft-list-btn {
+          all: unset;
+          display: block;
+          width: 100%;
+          cursor: pointer;
+          border-bottom: 1px solid #f1f5f9;
+          box-sizing: border-box;
+        }
+        .ft-list-btn:hover .ft-list-inner     { background-color: #fff7ed; }
+        .ft-list-btn.ft-active .ft-list-inner { background-color: #fff7ed; }
 
-      {/* Lista de solicitudes */}
-      {solicitudes.length === 0 ? (
-        <div className="bg-white p-12 rounded-xl border border-slate-200 text-center">
-          <p className="text-slate-600">No hay solicitudes {filtro !== 'todas' ? getEstadoInfo(filtro).label.toLowerCase() : ''}</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {solicitudes.map((sol) => {
-            const estadoInfo = getEstadoInfo(sol.estado);
-            
-            return (
-              <div key={sol.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      
-                      <div className="flex items-center gap-3 mb-2 flex-wrap">
-                        <h3 className="text-lg font-bold text-slate-900">
-                          {sol.nombreUsuario}
-                        </h3>
-                       <span className={`px-3 py-1 rounded-full text-xs font-bold border ${estadoInfo.bgColor} ${estadoInfo.textColor} ${estadoInfo.borderColor}`}>
-                           {estadoInfo.icono} {estadoInfo.label}
-                       </span>
+        .ft-btn-main {
+          flex: 1;
+          padding: 13px 16px;
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: 700;
+          text-align: center;
+          cursor: pointer;
+          border: 1.5px solid #0f172a;
+          background: #0f172a;
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+          transition: background .15s, box-shadow .15s;
+          white-space: nowrap;
+        }
+        .ft-btn-main:hover:not(:disabled) {
+          background: #1e293b;
+          box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+        }
+        .ft-btn-main:disabled {
+          background: #e2e8f0 !important;
+          color: #94a3b8 !important;
+          border-color: #e2e8f0 !important;
+          cursor: not-allowed !important;
+          box-shadow: none !important;
+        }
 
-                
-                      </div>
-                      <p className="text-sm text-slate-600 line-clamp-1">{sol.descripcionCarga}</p>
-                    </div>
-                  </div>
+        .ft-btn-chat {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 13px 16px;
+          border-radius: 10px;
+          border: 1.5px solid #0f172a;
+          background: #0f172a;
+          font-weight: 700;
+          font-size: 14px;
+          color: #ffffff;
+          cursor: pointer;
+          transition: all .15s;
+          white-space: nowrap;
+        }
+        .ft-btn-chat:hover {
+          background: #1e293b;
+        }
 
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p className="text-xs font-bold text-slate-500 uppercase mb-1">Distancia</p>
-                      <p className="text-sm text-slate-900">{sol.distanciaKm} km</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-500 uppercase mb-1">Fecha</p>
-                      <p className="text-sm text-slate-900">
-                        {sol.fechaSolicitada?.toDate?.()?.toLocaleDateString('es-HN')}
-                      </p>
-                    </div>
-                  </div>
+        /* Botones fijos — cuando solo hay chat, ocupa todo */
+        .ft-btns { flex-wrap: nowrap; }
+        .ft-btns:has(> :only-child) .ft-btn-chat { flex: 1; }
 
-                  {/* Botones de acción */}
-                  <div className="flex gap-2 pt-4 border-t">
-                    <button
-                      onClick={() => verDetalle(sol)}
-                      className="flex-1 px-4 py-2 bg-slate-100 text-slate-900 font-bold rounded-lg hover:bg-slate-200 transition-all"
-                    >
-                      Ver Detalle
-                    </button>
-                    
-                    <button
-                      onClick={() => abrirChat(sol)}
-                      className="flex-1 px-4 py-2 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 transition-all"
-                    >
-                      Chat
-                    </button>
-                  </div>
-                </div>
+        /* Modal chat */
+        .ft-chat-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.4);
+          z-index: 999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          backdrop-filter: blur(2px);
+        }
+        .ft-chat-modal {
+          background: #fff;
+          border-radius: 18px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          max-width: 500px;
+          height: 560px;
+          box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+          .ft-layout  { flex-direction: column !important; height: auto !important; }
+          .ft-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid #e9edf2; max-height: 260px; overflow-y: auto; }
+          .ft-panel   { min-height: 60vh; }
+          .ft-stats   { grid-template-columns: repeat(2,1fr) !important; }
+          .ft-btns    { flex-direction: column !important; }
+          .ft-btn-main, .ft-btn-chat { flex: unset !important; width: 100% !important; }
+          .ft-chat-overlay { padding: 0; align-items: flex-end; }
+          .ft-chat-modal   { max-width: 100%; height: 72vh; border-radius: 16px 16px 0 0; }
+        }
+      `}</style>
+
+      {/* ── MODAL CHAT ── */}
+      {vistaChat && sol && (
+        <div className="ft-chat-overlay" onClick={() => setVistaChat(false)}>
+          <div className="ft-chat-modal" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 flex-shrink-0">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[13px] font-bold flex-shrink-0"
+                style={{ background: '#fff4ed', border: '1.5px solid #fed7aa', color: '#ea580c' }}
+              >
+                {(sol.nombreUsuario || '?')[0].toUpperCase()}
               </div>
-            );
-          })}
+              <div className="flex-1 min-w-0">
+                <p className="m-0 text-[13px] font-bold text-slate-900 truncate capitalize">{sol.nombreUsuario}</p>
+                <p className="m-0 text-[11px] text-slate-400 truncate">{sol.descripcionCarga}</p>
+              </div>
+              <button
+                onClick={() => setVistaChat(false)}
+                style={{
+                  border: 'none', background: '#f1f5f9', borderRadius: 8,
+                  width: 28, height: 28, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <svg width="13" height="13" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <ChatTransportista
+                solicitud={sol}
+                usuario={usuario}
+                onClose={() => setVistaChat(false)}
+                embebido={true}
+              />
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Chat Modal */}
-      {chatAbierto && (
-        <ChatTransportista
-          solicitud={chatAbierto}
-          usuario={usuario}
-          onClose={() => setChatAbierto(null)}
-        />
-      )}
+      <div
+        className="ft-layout flex bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm"
+        style={{ height: '100%', minHeight: 0, flex: 1 }}
+      >
+        {/* ── SIDEBAR ── */}
+        <div
+          className="ft-sidebar flex flex-col bg-white border-r border-slate-100 overflow-hidden flex-shrink-0"
+          style={{ width: 280 }}
+        >
+          {/* Cabecera */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
+            <div>
+              <p className="m-0 text-[15px] font-bold text-slate-900">Mis Fletes</p>
+              <p className="m-0 mt-0.5 text-xs text-slate-400">
+                {solicitudes.length} solicitud{solicitudes.length !== 1 ? 'es' : ''}
+              </p>
+            </div>
+            <span
+              className="w-2 h-2 rounded-full bg-emerald-500 inline-block flex-shrink-0"
+              style={{ boxShadow: '0 0 0 3px #d1fae5' }}
+            />
+          </div>
 
-      {/* Modal Detalle con Mapa */}
-      {detalleAbierto && <ModalDetalleSolicitud />}
+          {/* Lista — scrollable */}
+          <div className="flex-1 overflow-y-auto">
+            {solicitudes.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center p-8 gap-3 h-full">
+                <svg className="w-9 h-9 text-slate-200" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-slate-400 text-sm m-0 font-medium text-center">Sin solicitudes</p>
+              </div>
+            ) : solicitudes.map(s => {
+              const h      = ESTADO_HEX[s.estado] || ESTADO_HEX.finalizado;
+              const activo = seleccionada?.id === s.id;
+              return (
+                <button
+                  key={s.id}
+                  className={`ft-list-btn${activo ? ' ft-active' : ''}`}
+                  onClick={() => { setSeleccionada(s); setVistaChat(false); }}
+                >
+                  <div className="ft-list-inner flex items-stretch transition-colors duration-100">
+                    <div
+                      className="flex-shrink-0 transition-colors duration-150"
+                      style={{ width: 4, background: activo ? h.strip : h.strip + '30', borderRadius: '0 2px 2px 0' }}
+                    />
+                    <div className="flex-1 py-4 px-4">
+                      <div className="flex justify-between items-center gap-2 mb-2">
+                        <span className="font-black text-[14px] text-slate-900 leading-tight truncate capitalize">
+                          {s.nombreUsuario}
+                        </span>
+                        <EstadoBadge estado={s.estado} />
+                      </div>
+                     
+                      <div className="flex items-center gap-2">
+                       
+                        <span className="text-[11px] text-slate-400">
+                          {s.fechaSolicitada?.toDate?.()?.toLocaleDateString('es-HN')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── PANEL DERECHO ── */}
+        {!sol ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 bg-slate-50">
+            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+              <svg className="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-slate-500 font-semibold m-0 mb-1">Selecciona un flete</p>
+              <p className="text-xs text-slate-300 m-0">Elige una solicitud para ver los detalles</p>
+            </div>
+          </div>
+        ) : (
+          <div className="ft-panel ft-fadein flex-1 flex flex-col overflow-hidden bg-slate-50 min-w-0">
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-5 flex flex-col gap-4">
+
+              {/* Mapa */}
+              <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-white">
+                <MapaRuta origen={sol.origen} destino={sol.destino} height="260px" />
+              </div>
+
+              <div className="flex flex-col gap-4">
+
+                {/* Stats */}
+                <div className="ft-stats grid grid-cols-3 gap-3">
+                  <StatCard label="Distancia"   value={`${sol.distanciaKm} km`} />
+                  <StatCard label="Descripción" value={sol.descripcionCarga || '—'} />
+                  <StatCard label="Fecha"       value={sol.fechaSolicitada?.toDate?.()?.toLocaleDateString('es-HN') || '—'} />
+                </div>
+
+                {/* Banner */}
+                {renderBanner()}
+
+                {/* Botones: acción + chat fijos a la par */}
+                <div className="ft-btns border-t border-slate-100 pt-3.5 flex gap-2">
+
+                  {mostrarBoton && (
+                    <button
+                      className="ft-btn-main"
+                      onClick={() => cambiarEstado(sol.id, siguienteEstado, accionTransportista)}
+                      disabled={!puedeAccionar()}
+                    >
+                      {accionTransportista}
+                    </button>
+                  )}
+
+                  <button
+                    className="ft-btn-chat"
+                    onClick={() => setVistaChat(true)}
+                  >
+                    Abrir Chat
+                  </button>
+
+                </div>
+
+              </div>
+            </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
-
-  // Componenete modal para mostrar detalla de la solicitud, con mapa y acciones y dependiendo del estado
-  function ModalDetalleSolicitud() {
-    // Obtener solicitud actualizada en tiempo real
-    const sol = solicitudes.find(s => s.id === detalleAbierto.id) || detalleAbierto;
-    const estadoInfo = getEstadoInfo(sol.estado);
-    const siguienteEstado = estadoInfo.siguienteEstado;
-    
-    //  Verificaciones de pago del primer código
-    const esperandoPago = sol.oferta?.estado === 'pendiente_cliente';
-
-    //Funcion para determinar si el transportista puede acciona el cambio de estado, esto depende del estado actual de la solicitud
-    const puedeAccionar = () => {
-      if (sol.estado === 'pendiente') return true;// puede aceptar la solicitud
-      if (sol.estado === 'aceptada') return false;//No puede comenzar el servicio si el cliente no ha pagado
-      if (sol.estado === 'pagado') return sol.pagado === true;//Solo se puede iniciar el servicio si el pago ha sido confirmado
-      return true;
-    };
-
-    //No mostrar el boton de accion si no hay un siguiente estado definido, si la accion del transportista es nula  o vacio, o si la solicitud ya fue aceptada
-    const mostrarBoton = siguienteEstado && estadoInfo.accionTransportista && sol.estado !== 'aceptada';
-
-    return (
-      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-          
-          {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex items-center justify-between z-10">
-            <div>
-              <h2 className="text-2xl font-black text-slate-900">
-                Solicitud de {sol.nombreUsuario}
-              </h2>
-              <div className="flex items-center gap-3 mt-2 flex-wrap">
-                <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold ${estadoInfo.bgColor} ${estadoInfo.textColor}`}>
-                  {estadoInfo.icono} {estadoInfo.label}
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => setDetalleAbierto(null)}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Contenido */}
-          <div className="p-6 space-y-6">
-            
-            {/* Mapa con Ruta */}
-            <MapaRuta 
-              origen={sol.origen}
-              destino={sol.destino}
-              height="400px"
-            />
-
-            {/* Info de la solicitud */}
-            <div className="bg-slate-50 rounded-xl p-6 space-y-4">
-              <div>
-                <p className="text-sm font-bold text-slate-500 uppercase mb-2">Descripción de Carga</p>
-                <p className="text-lg text-slate-900">{sol.descripcionCarga}</p>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm font-bold text-slate-500 uppercase mb-1">Distancia</p>
-                  <p className="text-xl font-bold text-slate-900">{sol.distanciaKm} km</p>
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-500 uppercase mb-1">Tipo Vehículo</p>
-                  <p className="text-xl font-bold text-slate-900 capitalize">{sol.tipoVehiculo}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-500 uppercase mb-1">Fecha Solicitada</p>
-                  <p className="text-xl font-bold text-slate-900">
-                    {sol.fechaSolicitada?.toDate?.()?.toLocaleDateString('es-HN')}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Banners de estados de pago */}
-            
-            {/* Banner estado "pendiente" */}
-            {sol.estado === 'pendiente' && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p className="font-bold text-yellow-900 mb-1">Solicitud pendiente</p>
-                <p className="text-sm text-yellow-700">Acepta la solicitud para iniciar la negociación con el cliente</p>
-              </div>
-            )}
-
-            {/* ==========================================
-                NUEVO: Banner estado "entregado"
-                Transportista espera confirmación del cliente
-                ========================================== */}
-            {sol.estado === 'entregado' && (
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <p className="font-bold text-purple-900 mb-1">Carga entregada - Esperando confirmación del cliente</p>
-                <p className="text-sm text-purple-700">
-                  El cliente debe confirmar la entrega y calificar el servicio para finalizar
-                </p>
-              </div>
-            )}
-
-            {/* Banner estado "aceptada" sin pago */}
-            {sol.estado === 'aceptada' && !sol.pagado && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="font-bold text-blue-900 mb-1">
-                  {esperandoPago ? 'Esperando pago del cliente' : 'Solicitud aceptada'}
-                </p>
-                <p className="text-sm text-blue-700">
-                  {esperandoPago
-                    ? `Oferta enviada: L. ${sol.oferta.monto} — esperando que el cliente pague`
-                    : 'Abre el chat para enviarle tu oferta de precio al cliente'
-                  }
-                </p>
-              </div>
-            )}
-
-           {/* Banner pago confirmado - solo mostrar en estado "pagado" */}
-{sol.estado === 'pagado' && sol.pagado && (
-  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-    <p className="font-bold text-green-900 mb-1">Pago confirmado - puedes iniciar el servicio</p>
-    <p className="text-sm text-green-700">
-      Monto pagado: L. {sol.pago?.montoPagado || sol.precioAcordado}
-    </p>
-    {sol.oferta?.desglose && (
-      <p className="text-sm font-bold text-green-700 mt-1">
-        Recibirás: L. {sol.oferta.desglose.pagoTransportista}
-      </p>
-    )}
-  </div>
-)}
-
-            {/* Botones de Acción */}
-            <div className="flex gap-3 pt-4 border-t">
-              <button
-                onClick={() => {
-                  abrirChat(sol);
-                  setDetalleAbierto(null);
-                }}
-                className="flex-1 px-6 py-3 bg-slate-100 text-slate-900 font-bold rounded-xl hover:bg-slate-200 transition-all"
-              >
-                Abrir Chat
-              </button>
-
-              {/*
-                   Boton de accion principal,su texto y disponibilidad dependen del estado actual de la solicitud  y de si el pago ha sido confirmado o no,esto se maneja con la funcio puede acciona y con la varible mostrarboton.
-                  */}
-              {mostrarBoton && (
-                <button
-                  onClick={() => cambiarEstado(sol.id, siguienteEstado)}
-                  disabled={!puedeAccionar()}
-                  className={`flex-1 px-6 py-3 font-bold rounded-xl transition-all text-lg ${
-                    puedeAccionar()
-                      ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-lg'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  {estadoInfo.accionTransportista}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 }
 
 export default SolicitudesTransportista;

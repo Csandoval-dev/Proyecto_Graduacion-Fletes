@@ -1,4 +1,4 @@
-// src/components/ModalCalificacion.jsx
+
 import { useState } from 'react';
 import { doc, updateDoc, serverTimestamp, arrayUnion, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
