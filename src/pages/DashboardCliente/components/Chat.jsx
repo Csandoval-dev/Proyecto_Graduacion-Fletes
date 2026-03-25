@@ -20,7 +20,7 @@ const IconX = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
   </svg>
 );
-
+// Componente principal del chat
 function Chat({ conversacionId, usuario, onClose }) {
   const [mensajes, setMensajes] = useState([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
@@ -165,7 +165,7 @@ function Chat({ conversacionId, usuario, onClose }) {
       alert('Pago realizado, pero hubo un error al actualizar. Contacta soporte.');
     }
   };
-
+// Formatear fecha de mensajes
   const formatearFecha = (timestamp) => {
     if (!timestamp) return '';
     try {
@@ -179,8 +179,7 @@ function Chat({ conversacionId, usuario, onClose }) {
         <div className="h-6 w-6 border-2 border-black border-t-transparent animate-spin rounded-full"></div>
       </div>
     );
-  }
-
+  }// Renderizar chat
   return (
     <>
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">

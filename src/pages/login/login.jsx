@@ -187,7 +187,6 @@ function Login() {
             </button>
           </div>
         </div>
-        
         <div className="mt-10 text-center text-sm font-medium text-gray-500">
           ¿Aún no tienes cuenta?{" "}
           <Link to="/register" className="text-black font-black hover:underline decoration-2 underline-offset-4 transition-all">Crea una aquí</Link>

@@ -61,15 +61,15 @@ function BuscarTransportistas({ usuario }) {
   const [filtroVehiculo, setFiltroVehiculo] = useState("todos");
   const [filtroCalificacion, setFiltroCalificacion] = useState(0);
   const [soloDisponibles, setSoloDisponibles] = useState(false);
-
+//Cargar transportista al monta el componente
   useEffect(() => {
     cargarTransportistas();
   }, []);
-
+//Aplicar filtros cada vez que cambien los transportistas o los criterios de búsqueda
   useEffect(() => {
     aplicarFiltros();
   }, [transportistas, searchTerm, filtroZona, filtroVehiculo, filtroCalificacion, soloDisponibles]);
-
+// Función para cargar transportistas desde Firestore
   const cargarTransportistas = async () => {
     try {
       setLoading(true);
@@ -79,13 +79,13 @@ function BuscarTransportistas({ usuario }) {
         collection(db, "transportistas"),
         where("verificado", "==", true)
       );
-      
+      // Ejecutar query
       const snapshot = await getDocs(q);
       const lista = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-      
+      // Guardar en estado
       setTransportistas(lista);
     } catch (error) {
       console.error("Error al cargar transportistas:", error);
@@ -93,7 +93,7 @@ function BuscarTransportistas({ usuario }) {
       setLoading(false);
     }
   };
-
+// Función para aplicar filtros a la lista de transportistas
   const aplicarFiltros = () => {
     let resultado = [...transportistas];
 
@@ -134,21 +134,21 @@ function BuscarTransportistas({ usuario }) {
 
   // Obtener tipos de vehículos únicos
   const tiposVehiculo = [...new Set(transportistas.map(t => t.vehiculo?.tipo).filter(Boolean))];
-
+//  Funciones para manejar el perfil detallado y la solicitud de contacto
   const abrirPerfil = (transportista) => {
     setSelectedTransportista(transportista);
   };
-
+// Cerrar perfil
   const cerrarPerfil = () => {
     setSelectedTransportista(null);
   };
-
+// Abrir modal de solicitud de contacto
   const contactarTransportista = (transportista) => {
     setTransportistaParaSolicitud(transportista);
     setModalSolicitudOpen(true);
     cerrarPerfil();
   };
-
+// Manejar éxito en la creación de solicitud
   const handleSolicitudSuccess = (solicitudId) => {
     alert(' Solicitud creada exitosamente. ¡Puedes chatear con el transportista en "Mis Conversaciones"!');
     // Opcional: Redirigir a Mis Conversaciones

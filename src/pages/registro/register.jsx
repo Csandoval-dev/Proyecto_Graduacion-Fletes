@@ -13,6 +13,7 @@ function Register() {
     telefono: "",
     password: "",
     confirmPassword: "",
+    nacionalidad: "",
     rol: "cliente" 
   });
   const [error, setError] = useState("");
@@ -44,6 +45,7 @@ function Register() {
             rol: "cliente", 
             fotoPerfil: user.photoURL || "",
             createdAt: serverTimestamp(),
+            nacionalidad:user.national,
             activo: true
           });
         }
@@ -57,7 +59,7 @@ function Register() {
       setLoading(false);
     }
   };
-
+// Funcion de registro con email y contraseña
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -74,7 +76,7 @@ function Register() {
       setLoading(false);
       return;
     }
-
+// Llamamos a la función de registro del servicio, pasando los datos del formulario
     const resultado = await registrarUsuario(
       formData.email, 
       formData.password,
@@ -132,7 +134,7 @@ function Register() {
               placeholder="correo@ejemplo.com" disabled={loading}
             />
           </div>
-
+         
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2 ml-1">Contraseña</label>

@@ -1,12 +1,12 @@
-// functions/index.js
+
 const { onCall, HttpsError, onRequest } = require("firebase-functions/v2/https");
 const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
-
+// Iniciarlizamos al principio para evitar multiples inicializaciones en cada funcion
 admin.initializeApp();
-
+//Definimos las variables de entorno para el corre y stripe
 const gmailEmail = defineSecret("GMAIL_EMAIL");
 const gmailPassword = defineSecret("GMAIL_PASSWORD");
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
@@ -19,7 +19,7 @@ const convertirHNLaUSD = (montoHNL) => {
   return Math.round(usd * 100); // Stripe usa centavos
 };
 
-
+//Funcion para crear el intetno de pago.
 exports.crearIntentoPago = onCall(
   { cors: true, secrets: [stripeSecretKey] },
   async (request) => {
@@ -61,8 +61,8 @@ exports.crearIntentoPago = onCall(
       console.log(`Conversión: L.${monto} HNL → $${montoUSD} USD (${montoCentavosUSD} centavos)`);
 
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: montoCentavosUSD,   // ✅ Centavos USD
-        currency: 'usd',            // ✅ USD en lugar de HNL
+        amount: montoCentavosUSD,   //  Centavos USD
+        currency: 'usd',            //  USD en lugar de HNL
         metadata: {
           solicitudId,
           usuarioId: request.auth.uid,
@@ -87,7 +87,7 @@ exports.crearIntentoPago = onCall(
 
     } catch (error) {
       console.error('Error al crear Payment Intent:', error.message);
-      // ✅ Siempre retornar mensaje legible, nunca null
+      //  Siempre retornar mensaje legible, nunca null
       throw new HttpsError("internal", error.message || "Error al procesar el pago");
     }
   }
@@ -124,9 +124,9 @@ exports.confirmarPago = onRequest(
           estado: 'pagado',
           pago: {
             stripePaymentId: paymentIntent.id,
-            // ✅ Guardamos ambos montos en Firestore
-            montoPagado: parseFloat(montoHNL),   // Lo que ve el cliente (HNL)
-            montoUSD: parseFloat(montoUSD),       // Lo que procesó Stripe (USD)
+            // Guardamos ambos montos en Firestore
+            montoPagado: parseFloat(montoHNL),   // Lo que ve el cliente HNL
+            montoUSD: parseFloat(montoUSD),       // Lo que procesó Stripe USD
             tasaCambio: parseFloat(tasaCambio),
             fechaPago: admin.firestore.FieldValue.serverTimestamp(),
             metodo: paymentIntent.payment_method_types[0],
@@ -157,12 +157,12 @@ exports.aprobarTransportista = onCall(
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "No autorizado.");
     }
-
+//Solo el admin puede aprobar transportista, se verifica el rol del usuaario autenticado
     const { transportistaId } = request.data;
     if (!transportistaId) {
       throw new HttpsError("invalid-argument", "ID del transportista requerido.");
     }
-
+//Obtenemos los datos del trnsportista desde Firestore
     const transportistaRef = admin.firestore().collection("transportistas").doc(transportistaId);
     const doc = await transportistaRef.get();
 
@@ -200,7 +200,6 @@ exports.aprobarTransportista = onCall(
         estadoVerificacion: "aprobado",
         fechaAprobacion: admin.firestore.FieldValue.serverTimestamp()
       });
-
       batch.set(admin.firestore().collection("usuarios").doc(userRecord.uid), {
         uid: userRecord.uid,
         nombre,
@@ -281,7 +280,7 @@ exports.rechazarTransportista = onCall(
 
 // Notidicaciones Push
 
-
+//Definimos los mensajes de notificacion para cada estado del servicio
 const MENSAJES_NOTIFICACION = {
   aceptada: {
     titulo: "Solicitud Aceptada",
@@ -308,7 +307,7 @@ const MENSAJES_NOTIFICACION = {
     mensaje: "El servicio ha sido completado"
   }
 };
-
+//Funcion para enviar notificacion push a un usuario , reutilizable para cualquier tipo de notificacion
 async function enviarNotificacionPush(usuarioId, titulo, mensaje) {
   try {
     const userDoc = await admin.firestore().collection("usuarios").doc(usuarioId).get();
@@ -346,7 +345,7 @@ async function enviarNotificacionPush(usuarioId, titulo, mensaje) {
     return false;
   }
 }
-
+//Trigger para notificar al transportista cuando un cliente crea una nueva solicitud de flete
 exports.notificarNuevaSolicitud = onDocumentCreated(
   "solicitudes/{solicitudId}",
   async (event) => {
@@ -362,7 +361,7 @@ exports.notificarNuevaSolicitud = onDocumentCreated(
     }
   }
 );
-//
+//Trigger para notificar al usuario cuando cambia el estado de su solicitud
 exports.notificarCambioEstado = onDocumentUpdated(
   "solicitudes/{solicitudId}",
   async (event) => {
@@ -390,7 +389,7 @@ exports.notificarCambioEstado = onDocumentUpdated(
     }
   }
 );
-
+//Trigger para notificar a los participantes de una conversación cuando llega un mensaje nuevo
 exports.notificarNuevoMensaje = onDocumentCreated(
   "conversaciones/{conversacionId}/mensajes/{mensajeId}",
   async (event) => {

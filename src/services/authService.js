@@ -39,6 +39,7 @@ export const registrarUsuario = async (email, password, datosUsuario) => {
       rol: datosUsuario.rol, // cliente", transportista o administrador
       fotoPerfil: "",
       createdAt: serverTimestamp(),
+      nacionalidad:datosUsuario.nacionalidad,
       activo: true
     });
 

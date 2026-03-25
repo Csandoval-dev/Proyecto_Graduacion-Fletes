@@ -26,7 +26,7 @@ const IconClock = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 );
-
+// Componente principal del inicio del dashboard del cliente
 function Inicio({ usuario }) {
   const [stats, setStats] = useState({
     solicitudesActivas: 0,
@@ -34,13 +34,13 @@ function Inicio({ usuario }) {
     conversacionesActivas: 0
   });
   const [loading, setLoading] = useState(true);
-
+// Cargar estadísticas al montar el componente o cuando el usuario cambie
   useEffect(() => {
     if (usuario?.uid) {
       cargarEstadisticas();
     }
   }, [usuario]);
-
+// Función para cargar estadísticas desde Firestore
   const cargarEstadisticas = async () => {
     try {
       setLoading(true);

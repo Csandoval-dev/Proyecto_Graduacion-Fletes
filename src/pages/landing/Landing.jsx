@@ -13,7 +13,7 @@ import { CarouselVisual } from "../../components/landing/CarouselVisual";
 import { Beneficios } from "../../components/landing/Beneficios";
 import { Footer } from "../../components/landing/Footer";
 import ChatBot from "../../components/ChatBot";
-
+// Componente principal de la página de aterrizaje
 function Landing() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);

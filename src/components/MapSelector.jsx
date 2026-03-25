@@ -11,7 +11,7 @@ function ChangeView({ center }) {
   }, [center, map]);
   return null;
 }
-
+// Componente para manejar el marcador y eventos de clic en el mapa
 function LocationMarker({ position, setPosition }) {
   useMapEvents({
     click(e) {
@@ -20,7 +20,7 @@ function LocationMarker({ position, setPosition }) {
   });
   return position === null ? null : <Marker position={position} />;
 }
-
+// Icono personalizado para el marcador
 function MapSelector({ position, setPosition, direccionTexto, setDireccionTexto, height = "400px", mostrarMiUbicacion = true }) {
   const defaultCenter = [15.5050, -88.0250];
   const [center, setCenter] = useState(defaultCenter);
@@ -37,7 +37,7 @@ function MapSelector({ position, setPosition, direccionTexto, setDireccionTexto,
     // Reverse Geocoding
     obtenerNombreDireccion(latlng.lat, latlng.lng);
   };
-
+// Función para obtener el nombre de la dirección a partir de coordenadas usando Nominatim
   const obtenerNombreDireccion = async (lat, lon) => {
     try {
       const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`);
@@ -73,7 +73,7 @@ function MapSelector({ position, setPosition, direccionTexto, setDireccionTexto,
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     searchTimeoutRef.current = setTimeout(() => buscarDirecciones(texto), 600);
   };
-
+// Función para seleccionar una sugerencia y actualizar el mapa
   const seleccionarSugerencia = (sug) => {
     const coords = { lat: parseFloat(sug.lat), lng: parseFloat(sug.lon) };//
     setDireccionTexto(sug.display_name);

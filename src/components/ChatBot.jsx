@@ -22,13 +22,13 @@ const IconSend = () => (
   </svg>
 );
 
-// Base de datos de preguntas frecuentes
+// Base de datos de preguntas frecuentes con keywords para búsqueda, permitiendo respuestas más flexibles a las preguntas del usuario.
 const FAQ_DATABASE = [
   {
     id: 1,
     pregunta: "¿Qué servicios ofrece Fletia?",
     respuesta: "Fletia conecta clientes que necesitan transportar carga con transportistas verificados. Ofrecemos servicios de mudanzas, transporte de mercancía, entregas y fletes en general dentro de San Pedro Sula y zonas cercanas.",
-    keywords: ["servicios", "ofrece", "que hace", "mudanzas", "transporte"]
+    keywords: ["servicios", "ofrece", "que hace", "mudanzas", "transporte","Que es Fletia", "fletes", "entregas", "mercancia"]
   },
   {
     id: 2,
@@ -55,7 +55,7 @@ const FAQ_DATABASE = [
     keywords: ["cancelar", "cancelacion", "anular", "reembolso", "devolucion"]
   }
 ];
-
+// Componente principal del ChatBot, con funcionalidad de búsqueda de respuestas basada en keywords, manejo de mensajes del usuario y del bot, y una interfaz de chat interactiva.
 function ChatBot() {
   const [abierto, setAbierto] = useState(false);
   const [mensajes, setMensajes] = useState([
@@ -80,6 +80,7 @@ function ChatBot() {
       : "Lo siento, no tengo información sobre eso. Por favor contacta con nuestro equipo de soporte o revisa las preguntas frecuentes.";
   };
 
+
   // Manejar envío de mensaje
   const handleEnviar = (e) => {
     e.preventDefault();
@@ -95,7 +96,7 @@ function ChatBot() {
     // Buscar respuesta
     const respuesta = buscarRespuesta(inputUsuario);
 
-    // Agregar respuesta del bot (con delay para simular escritura)
+    // Agregar respuesta del bot con delay para simular escritura
     setTimeout(() => {
       setMensajes([
         ...nuevosMensajes,

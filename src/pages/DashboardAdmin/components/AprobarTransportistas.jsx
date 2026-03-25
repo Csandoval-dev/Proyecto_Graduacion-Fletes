@@ -1,4 +1,3 @@
-// src/pages/DashboardAdmin/components/AprobarTransportistas.jsx
 import { useState, useEffect } from "react";
 import { collection, getDocs, query, where, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
@@ -28,13 +27,13 @@ const IconX = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
   </svg>
 );
-
+// Componente principal
 function AprobarTransportistas() {
   const [transportistas, setTransportistas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTransportista, setSelectedTransportista] = useState(null);
   const [showModal, setShowModal] = useState(false);
-
+//Cargar transportistas pendiente al montar el componente
   useEffect(() => {
     cargarTransportistasPendientes();
   }, []);
@@ -57,7 +56,7 @@ function AprobarTransportistas() {
       setLoading(false);
     }
   };
-
+//Funcion para mostrar el modal con los detalles del transportista seleccionado
   const verDetalle = (transportista) => {
     setSelectedTransportista(transportista);
     setShowModal(true);

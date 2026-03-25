@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
 import MapaRuta from "../../../components/MapaRuta";
 import { getEstadoInfo } from "../../../constants/estadosFlete";

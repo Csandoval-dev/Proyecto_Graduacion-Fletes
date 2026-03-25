@@ -65,14 +65,14 @@ const IconLogout = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
   </svg>
 );
-
+// Componente principal del dashboard del cliente
 function DashboardCliente() {
   const navigate = useNavigate();
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("inicio");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
+//  Verificar autenticación y cargar datos del usuario al montar el componente
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -115,6 +115,7 @@ function DashboardCliente() {
       console.error("Error al cerrar sesión:", error);
     }
   };
+  
 
   if (loading) {
     return (
@@ -133,7 +134,9 @@ function DashboardCliente() {
     { id: "buscar", label: "Buscar Transportistas", icon: <IconSearch /> },
     { id: "conversaciones", label: "Mis Conversaciones", icon: <IconChat /> },
     { id: "fletes", label: "Mis Fletes", icon: <IconTruck /> },
-    { id: "perfil", label: "Mi Perfil", icon: <IconUser /> }
+   { id: "perfil", label: "Mi Perfil", icon: <IconUser /> },
+
+
   ];
 
   return (
@@ -270,6 +273,8 @@ function DashboardCliente() {
               {activeTab === "fletes" && <MisFletes usuario={usuario}/>}
               {activeTab === "conversaciones" && <MisConversaciones usuario={usuario} />}
               {activeTab === "perfil" && <MiPerfil usuario={usuario} />}
+             
+
               
             </div>
           </div>

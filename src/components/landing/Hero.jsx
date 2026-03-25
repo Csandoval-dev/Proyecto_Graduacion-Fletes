@@ -68,7 +68,7 @@ export const Hero = () => {
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
             >
               {/* BOTÓN 1: Para Clientes */}
-              <Link to="/home" className="w-full sm:w-auto">
+              <Link to="/login" className="w-full sm:w-auto">
                 <button className="group relative w-full px-8 py-4 bg-black text-white rounded-lg font-medium text-base overflow-hidden transition-all duration-300 hover:shadow-lg">
                   <span className="relative z-10">Buscar transportista</span>
                   <div className="absolute inset-0 bg-gray-800 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>

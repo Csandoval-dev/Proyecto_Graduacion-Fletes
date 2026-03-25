@@ -125,6 +125,10 @@ function FormularioPago({ solicitud, montoUSD, clientSecret, onExito }) {
         Pago seguro procesado por Stripe
       </p>
       {/* checkbox*/}
+      <div>
+        
+      </div>
+     
      
     </form>
   );

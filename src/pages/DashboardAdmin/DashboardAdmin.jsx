@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
@@ -15,12 +15,13 @@ const IconUsers = () => <svg className="w-5 h-5" fill="none" stroke="currentColo
 const IconTruck = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1" /></svg>;
 const IconClipboard = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>;
 
+//Componente principal
 function DashboardAdmin() {
   const navigate = useNavigate();
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("inicio");
-  
+  //estados para las estadisticas
   const [stats, setStats] = useState({
     totalUsuarios: 0,
     totalClientes: 0,
@@ -29,6 +30,7 @@ function DashboardAdmin() {
     solicitudesActivas: 0
   });
 
+//Verificar si el usuario esta autentica y es admin
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -51,7 +53,7 @@ function DashboardAdmin() {
     });
     return () => unsubscribe();
   }, [navigate]);
-
+//Funcion para cargar las estadisticas principales del dashboard
   const cargarEstadisticas = async () => {
     try {
       const usuariosSnapshot = await getDocs(collection(db, "usuarios"));
@@ -201,7 +203,7 @@ function DashboardAdmin() {
                     <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Total Usuarios</p>
                     <p className="text-4xl font-black text-slate-900 mt-1">{stats.totalUsuarios}</p>
                   </div>
-
+                  
                   {/* Card: Clientes */}
                   <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
                     <div className="bg-emerald-50 text-emerald-600 w-12 h-12 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">

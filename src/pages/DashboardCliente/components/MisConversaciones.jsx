@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
 import Chat from "./Chat";
-
+// Iconos SVG para la interfaz de conversaciones
 const IconChat = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -15,18 +15,18 @@ const IconUser = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
   </svg>
 );
-
+// Componente principal para mostrar las conversaciones del cliente
 function MisConversaciones({ usuario }) {
   const [conversaciones, setConversaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [chatAbierto, setChatAbierto] = useState(null);
-
+// Cargar conversaciones al montar el componente o cuando el usuario cambie
   useEffect(() => {
     if (usuario?.uid) {
       cargarConversaciones();
     }
   }, [usuario]);
-
+// Función para cargar conversaciones desde Firestore
   const cargarConversaciones = async () => {
     try {
       setLoading(true);
@@ -72,11 +72,11 @@ function MisConversaciones({ usuario }) {
       setLoading(false);
     }
   };
-
+// Función para abrir el chat de una conversación
   const abrirChat = (conversacion) => {
     setChatAbierto(conversacion.id);
   };
-
+// Función para formatear la fecha del último mensaje
   const formatearFecha = (timestamp) => {
     if (!timestamp) return "";
     

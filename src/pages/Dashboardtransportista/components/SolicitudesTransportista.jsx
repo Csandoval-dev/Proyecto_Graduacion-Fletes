@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import {
   collection, query, where, doc, updateDoc,
-  orderBy, arrayUnion, onSnapshot
+  orderBy, arrayUnion, onSnapshot, getDoc
 } from 'firebase/firestore';
 import { db } from '../../../firebase/firebase';
 import ChatTransportista from './ChatTransportista';
 import MapaRuta from '../../../components/MapaRuta';
 import { getEstadoInfo } from '../../../constants/estadosFlete';
+
 
 // Colores y estilos para estados 
 const ESTADO_HEX = {
@@ -65,6 +66,9 @@ function BannerEstado({ estado, title, children }) {
     </div>
   );
 }
+
+
+
 //Tarjeta para mostrar estadisticas clave del flete ,  como distancia, fecaha y descripcion breve.
 function StatCard({ label, value }) {
   return (
@@ -76,10 +80,11 @@ function StatCard({ label, value }) {
 }
 //Componenete pirncipal que muestra la lista de solicitudes del transportista,
 function SolicitudesTransportista({ usuario }) {
-  const [solicitudes, setSolicitudes]   = useState([]);
+  const [solicitudes, setSolicitudes]   = useState([]);// Lista se solicitudes del transportista
   const [loading, setLoading]           = useState(true);
   const [seleccionada, setSeleccionada] = useState(null);
   const [vistaChat, setVistaChat]       = useState(false);
+  const [totalFletes, setTotalFletes]   = useState(0);
 
   //Funcion para obtener solicitudes del trasnportista en tiempo real, ordenadas por fecha de creacion y actualizando la solicitud seleccionada si esta cambia de estado.
   useEffect(() => {
@@ -90,6 +95,7 @@ function SolicitudesTransportista({ usuario }) {
       where('transportistaId', '==', usuario.uid),
       orderBy('createdAt', 'desc')
     );
+
     //Escucha en tiempo real los cambios en las solicitudes del transportista y actualiza la lista y a solicitud seleccionada si esta cambia de estado.
     const unsub = onSnapshot(q, (snap) => {
       const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -99,6 +105,18 @@ function SolicitudesTransportista({ usuario }) {
     }, (err) => {
       console.error('Error:', err);
       setLoading(false);
+    });
+    return () => unsub();
+  }, [usuario]);
+  //Funcion para contar el total de solicitudes del transportista en tiempo real, actualizando el contador cada vez que se agrega o elimina una solicitud.
+    useEffect(() => {
+    if (!usuario?.uid) return;
+    const q = query(
+      collection(db, 'solicitudes'),
+      where('transportistaId', '==', usuario.uid)
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setTotalFletes(snap.size);
     });
     return () => unsub();
   }, [usuario]);
@@ -115,6 +133,7 @@ function SolicitudesTransportista({ usuario }) {
           fecha: new Date(),
           descripcion: infoNuevo.descripcion,
         }),
+        
       });
     } catch (err) {
       console.error('Error:', err);
@@ -122,7 +141,7 @@ function SolicitudesTransportista({ usuario }) {
     }
   };
 // Varibales derivadas para facilita la lectura y el manejo de solicitudes y sus eatdos, como la solicitud seleccionada,
-  const sol             = seleccionada
+  const sol = seleccionada
     ? (solicitudes.find(s => s.id === seleccionada.id) || seleccionada)
     : null;
   const estadoInfo      = sol ? getEstadoInfo(sol.estado) : null;
@@ -132,7 +151,7 @@ function SolicitudesTransportista({ usuario }) {
   //  Variable clara con la acción del transportista
   const accionTransportista = estadoInfo?.accionTransportista;
 
-  //  mostrarBoton respeta accionTransportista null  
+  //  mostrarBoton respetar accionTransportista null  
   const mostrarBoton =
     !!siguienteEstado &&
     !!accionTransportista &&
@@ -341,6 +360,7 @@ function SolicitudesTransportista({ usuario }) {
           className="ft-sidebar flex flex-col bg-white border-r border-slate-100 overflow-hidden flex-shrink-0"
           style={{ width: 280 }}
         >
+
           {/* Cabecera */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
             <div>

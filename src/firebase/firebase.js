@@ -34,14 +34,14 @@ export const getMessagingInstance = async () => {
   try {
     const supported = await isMessagingSupported();
     if (supported) {
-      // ✅ Registrar SW manualmente
+      //  Registrar SW manualmente
       await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-      console.log('✅ Service Worker registrado');
+      console.log(' Service Worker registrado');
       
       messaging = getMessaging(app);
-      console.log('✅ Firebase Messaging inicializado');
+      console.log(' Firebase Messaging inicializado');
     } else {
-      console.log('⚠️ Messaging no soportado');
+      console.log(' Messaging no soportado');
     }
   } catch (error) {
     console.error('Error al inicializar Messaging:', error);

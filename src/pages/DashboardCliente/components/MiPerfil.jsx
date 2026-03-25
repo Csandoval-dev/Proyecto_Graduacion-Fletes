@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
-
+// Iconos SVG para el perfil
 const IconUser = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -26,7 +26,7 @@ const IconCheck = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
   </svg>
 );
-
+// Componente principal del perfil del cliente
 function MiPerfil({ usuario }) {
   const [editando, setEditando] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -34,15 +34,16 @@ function MiPerfil({ usuario }) {
     nombre: usuario?.nombre || "",
     telefono: usuario?.telefono || ""
   });
-
+// Manejar cambios en los campos editables
   const handleChange = (e) => {
     const { name, value } = e.target;
     setDatosEditados(prev => ({
       ...prev,
       [name]: value
     }));
+    alert(" Cambios guardados localmente. Recuerda hacer clic en 'Guardar Cambios' para actualizar tu perfil.");
   };
-
+// Manejar guardado de cambios en Firestore
   const handleGuardar = async () => {
     try {
       setGuardando(true);
@@ -65,7 +66,7 @@ function MiPerfil({ usuario }) {
       setGuardando(false);
     }
   };
-
+// Manejar cancelación de edición
   const handleCancelar = () => {
     setDatosEditados({
       nombre: usuario?.nombre || "",

@@ -17,7 +17,7 @@ const IconCheck = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
   </svg>
 );
-
+// Componente principal del perfil del transportista
 function PerfilTransportista() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1); // 1: Datos personales, 2: Vehículo, 3: Documentos
@@ -52,12 +52,12 @@ function PerfilTransportista() {
     tarjetaCirculacion: null,
     fotosVehiculo: []
   });
-
+// Manejar cambios en los campos de texto
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-
+// Manejar cambios en los campos de archivos
   const handleFileChange = (e, tipo) => {
     const file = e.target.files[0];
     
@@ -88,7 +88,7 @@ function PerfilTransportista() {
     };
     reader.readAsDataURL(file);
   };
-
+// Manejar selección de múltiples fotos del vehículo
   const handleMultipleFiles = (e) => {
     const files = Array.from(e.target.files);
     
@@ -109,7 +109,7 @@ function PerfilTransportista() {
         return;
       }
     }
-
+// Si todos los archivos son válidos, guardarlos y crear previews
     setError("");
     setArchivos(prev => ({ ...prev, fotosVehiculo: files }));
 
@@ -126,7 +126,7 @@ function PerfilTransportista() {
       reader.readAsDataURL(file);
     });
   };
-
+// Función para validar campos del Step 1
   const validarStep1 = () => {
     if (!formData.nombre || !formData.email || !formData.telefono || !formData.zona) {
       setError("Por favor completa todos los campos obligatorios");
@@ -141,7 +141,7 @@ function PerfilTransportista() {
     setError("");
     return true;
   };
-
+// Función para validar campos del Step 2
   const validarStep2 = () => {
     if (!formData.tipoVehiculo || !formData.marca || !formData.modelo || 
         !formData.placa || !formData.capacidadKg) {
@@ -151,7 +151,7 @@ function PerfilTransportista() {
     setError("");
     return true;
   };
-
+// Función para validar archivos del Step 3
   const validarStep3 = () => {
     if (!archivos.licencia || !archivos.tarjetaCirculacion || archivos.fotosVehiculo.length === 0) {
       setError("Por favor sube todos los documentos requeridos");
@@ -160,7 +160,7 @@ function PerfilTransportista() {
     setError("");
     return true;
   };
-
+  // Manejar avance al siguiente paso
   const handleNext = () => {
     if (step === 1 && validarStep1()) {
       setStep(2);
@@ -170,7 +170,7 @@ function PerfilTransportista() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
-
+// Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     

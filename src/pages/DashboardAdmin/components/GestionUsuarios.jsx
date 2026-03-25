@@ -20,7 +20,7 @@ const IconX = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
   </svg>
 );
-
+// Componente principal
 function GestionUsuarios() {
   // --- ESTADOS DEL COMPONENTE ---
   const [usuarios, setUsuarios] = useState([]); // Lista principal de usuarios

@@ -43,7 +43,7 @@ const IconLogout = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
   </svg>
 );
-
+//componente principal del dashboard del transportista, con su respectiva navegacion y carga de datos del perfil.
 function DashboardTransportista() {
   const navigate = useNavigate();
   const [perfil, setPerfil] = useState(null);
@@ -265,6 +265,7 @@ function VistaPerfil({ perfil }) {
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState(null);
   const [editandoMensaje, setEditandoMensaje] = useState(false);
+  const [borrandoMensaje, setBorrandoMensaje] = useState(false);
 
   // Cargar mensaje personalizado existente
   useEffect(() => {
@@ -323,6 +324,25 @@ function VistaPerfil({ perfil }) {
     
   };
 //Funcion eliminar el mensaje pesonalizado
+  const handleBorrarMensaje = async () => {
+    if (!confirm('¿Estás seguro de que deseas borrar el mensaje personalizado?')) return;
+    try {
+      setBorrandoMensaje(true);
+      const userRef = doc(db, 'usuarios', perfil.uid);
+      await updateDoc(userRef, {
+        mensajePersonalizado: ''
+      });
+      setMensaje({ tipo: 'exito', texto: 'Mensaje borrado correctamente' });
+      setTimeout(() => setMensaje(null), 3000);
+      setEditandoMensaje(true);
+    } catch (error) {
+      console.error('Error al borrar:', error);
+      setMensaje({ tipo: 'error', texto: 'Error al borrar el mensaje' });
+    } finally {
+      setBorrandoMensaje(false);
+    }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -398,14 +418,26 @@ function VistaPerfil({ perfil }) {
             </div>
           )}
 
-          {/* Botón guardar/editar */}
-          <button
-            onClick={editandoMensaje ? handleGuardarMensaje : handleEditarMensaje}
-            disabled={guardando || (!editandoMensaje && !mensajePersonalizado.trim())}
-            className="w-full px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {guardando ? 'Guardando...' : (editandoMensaje ? 'Guardar Mensaje' : 'Editar Mensaje')}
-          </button>
+          {/* Botones guardar y borrar lado a lado */}
+          <div className="flex gap-4">
+            <button
+              onClick={editandoMensaje ? handleGuardarMensaje : handleEditarMensaje}
+              disabled={guardando || (!editandoMensaje && !mensajePersonalizado.trim())}
+              className="flex-1 px-6 py-4 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-base"
+            >
+              {guardando ? 'Guardando...' : (editandoMensaje ? 'Guardar Mensaje' : 'Editar Mensaje')}
+            </button>
+            
+            {(perfil?.mensajePersonalizado || mensajePersonalizado.trim()) && (
+              <button
+                onClick={handleBorrarMensaje}
+                disabled={borrandoMensaje}
+                className="flex-1 px-6 py-4 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-base"
+              >
+                {borrandoMensaje ? 'Borrando...' : 'Borrar Mensaje'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -88,7 +88,7 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
 
       
       // CREAR CONVERSACIÓN
-    
+
       const conversacionRef = await addDoc(collection(db, 'conversaciones'), {
         solicitudId: solicitudRef.id,
         participantes: [usuario.uid, transportista.usuarioId],
@@ -101,7 +101,6 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
 
       
       // N MENSAJE INICIAL AUTOMÁTICO
-      
       
       try {
         const transportistaRef = doc(db, 'usuarios', transportista.usuarioId);
@@ -151,7 +150,7 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
       setLoading(false);
     }
   };
-
+// Función para manejar el avance de pasos con validación básica
   const handleSiguiente = () => {
     if (paso === 1 && !origenTexto.trim()) {
       alert('Escribe la dirección de origen');
