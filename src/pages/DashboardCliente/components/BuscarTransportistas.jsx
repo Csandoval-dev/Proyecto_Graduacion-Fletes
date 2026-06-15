@@ -152,6 +152,10 @@ function BuscarTransportistas({ usuario }) {
   const handleSolicitudSuccess = (solicitudId) => {
     alert(' Solicitud creada exitosamente. ¡Puedes chatear con el transportista en "Mis Conversaciones"!');
     // Opcional: Redirigir a Mis Conversaciones
+    setModalSolicitudOpen(false);
+
+    // Aquí podrías agregar lógica para abrir el chat directamente con el transportista
+     
   };
 
   if (loading) {

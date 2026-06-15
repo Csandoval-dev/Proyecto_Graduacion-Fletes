@@ -49,7 +49,7 @@ function AjustarVista({ origen, destino }) {
   return null;
 }
 
-function MapaRuta({ origen, destino, height = "400px" }) {
+function MapaRuta({ origen, destino, height = "clamp(220px, 40vh, 360px)" }) {
   // Si no hay coordenadas, usar las direcciones como centro aproximado
   const origenPos = origen?.lat && origen?.lng 
     ? [origen.lat, origen.lng] 
@@ -62,32 +62,30 @@ function MapaRuta({ origen, destino, height = "400px" }) {
   const hayCoordenadasCompletas = origen?.lat && destino?.lat;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5 sm:space-y-3">
       {/* Info de direcciones */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
           <div className="flex items-start gap-2">
-            <span className="text-2xl"></span>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-green-700 uppercase mb-1">Origen</p>
-              <p className="text-sm text-green-900 break-words">{origen?.direccion || 'No especificado'}</p>
+              <p className="text-sm text-green-900 wrap-break-word">{origen?.direccion || 'No especificado'}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
           <div className="flex items-start gap-2">
-            <span className="text-2xl"></span>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-red-700 uppercase mb-1">Destino</p>
-              <p className="text-sm text-red-900 break-words">{destino?.direccion || 'No especificado'}</p>
+              <p className="text-sm text-red-900 wrap-break-word">{destino?.direccion || 'No especificado'}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Mapa */}
-      <div className="rounded-lg overflow-hidden border-2 border-slate-300">
+      <div className="rounded-lg overflow-hidden border border-slate-300">
         <MapContainer
           center={origenPos}
           zoom={13}

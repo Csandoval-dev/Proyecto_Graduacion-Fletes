@@ -65,7 +65,8 @@ export const registrarUsuario = async (email, password, datosUsuario) => {
         },
         documentos: {
           licencia: "",
-          tarjetaCirculacion: ""
+          tarjetaCirculacion: "",
+          permisoIHTT: ""
         },
         calificacionPromedio: 0,
         totalCalificaciones: 0,

@@ -6,6 +6,7 @@ import { doc, getDoc, collection, query, where, getDocs, updateDoc, onSnapshot }
 import { auth, db } from "../../firebase/firebase";
 import { cerrarSesion } from "../../services/authService";
 import SolicitudesTransportista from "./components/SolicitudesTransportista";
+import VistaEstadisticas from "./components/VistaEstadisticas";
 
 // ========== ICONOS ==========
 const IconHome = () => (
@@ -37,12 +38,32 @@ const IconX = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
   </svg>
 );
-
+const IconChart = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>
+);
 const IconLogout = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
   </svg>
 );
+
+const getNombreCompleto = (perfil) => {
+  if (!perfil) return "";
+
+  if (perfil.nombreCompleto) {
+    return perfil.nombreCompleto.trim();
+  }
+
+  const partes = [perfil.nombre, perfil.apellido]
+    .filter(Boolean)
+    .map((parte) => String(parte).trim())
+    .filter(Boolean);
+
+  return partes.join(" ").trim() || "Transportista";
+};
 //componente principal del dashboard del transportista, con su respectiva navegacion y carga de datos del perfil.
 function DashboardTransportista() {
   const navigate = useNavigate();
@@ -106,6 +127,7 @@ function DashboardTransportista() {
   const menuItems = [
     { id: "inicio", label: "Inicio", icon: <IconHome /> },
     { id: "solicitudes", label: "Mis Solicitudes", icon: <IconClipboard /> },
+     { id: "estadisticas", label: "Estadísticas",   icon: <IconChart />     },
     { id: "perfil", label: "Mi Perfil", icon: <IconUser /> }
   ];
 
@@ -166,7 +188,7 @@ function DashboardTransportista() {
         <div className="p-4 border-t border-slate-200">
           <div className="bg-slate-50 p-3 rounded-lg">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Transportista</p>
-            <p className="text-sm font-bold text-slate-900 truncate">{perfil?.nombre}</p>
+            <p className="text-sm font-bold text-slate-900 truncate">{getNombreCompleto(perfil)}</p>
             <p className="text-xs text-slate-500 truncate">{perfil?.email}</p>
           </div>
         </div>
@@ -196,7 +218,7 @@ function DashboardTransportista() {
 
           <div className="flex items-center gap-4">
             <div className="hidden md:block text-right">
-              <p className="text-sm font-bold text-slate-900">{perfil?.nombre}</p>
+              <p className="text-sm font-bold text-slate-900">{getNombreCompleto(perfil)}</p>
               <p className="text-xs text-slate-500">Transportista</p>
             </div>
             
@@ -217,6 +239,7 @@ function DashboardTransportista() {
     <div className="p-4 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {activeTab === 'inicio' && <VistaInicio perfil={perfil} navigate={navigate} />}
+        {activeTab === "estadisticas" && <VistaEstadisticas perfil={perfil} />}
         {activeTab === 'perfil' && <VistaPerfil perfil={perfil} navigate={navigate} />}
       </div>
     </div>
@@ -232,7 +255,7 @@ function VistaInicio({ perfil }) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-black text-slate-900">¡Hola, {perfil?.nombre?.split(' ')[0]}! </h1>
+        <h1 className="text-3xl font-black text-slate-900">¡Hola, {getNombreCompleto(perfil)}! </h1>
         <p className="text-slate-600 mt-1">Bienvenido a tu panel de transportista</p>
       </div>
 
@@ -354,7 +377,7 @@ function VistaPerfil({ perfil }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <p className="text-sm font-bold text-slate-500 uppercase mb-2">Nombre</p>
-            <p className="text-lg font-bold text-slate-900">{perfil?.nombre}</p>
+            <p className="text-lg font-bold text-slate-900">{getNombreCompleto(perfil)}</p>
           </div>
           <div>
             <p className="text-sm font-bold text-slate-500 uppercase mb-2">Email</p>

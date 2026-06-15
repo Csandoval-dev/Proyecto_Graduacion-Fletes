@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { collection, query, where, getDocs, orderBy, } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
 import MapaRuta from "../../../components/MapaRuta";
@@ -28,13 +28,8 @@ function MisFletes({ usuario }) {
 
   const [calificacionAbierta, setCalificacionAbierta] = useState(null);
 //Cargar las solicitudes del cleinte desde firebase
-  useEffect(() => {
-    if (usuario?.uid) {
-      cargarSolicitudes();
-    }
-  }, [usuario, filtro]);
 //Fncion para cargar las solicitudes del cliente desde firebase
-  const cargarSolicitudes = async () => {
+  const cargarSolicitudes = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -67,7 +62,13 @@ function MisFletes({ usuario }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filtro, usuario?.uid]);
+
+  useEffect(() => {
+    if (usuario?.uid) {
+      cargarSolicitudes();
+    }
+  }, [usuario?.uid, cargarSolicitudes]);
 
   const abrirDetalle = (solicitud) => {
     setDetalleAbierto(solicitud);
@@ -235,9 +236,8 @@ function MisFletes({ usuario }) {
 }
 
 // MODAL CON PESTAÑAS
-function ModalDetalle({ solicitud, usuario, onClose, onAbrirCalificacion }) {
+function ModalDetalle({ solicitud, onClose, onAbrirCalificacion }) {
   const [pestanaActiva, setPestanaActiva] = useState('seguimiento');
-  const [conversacionId, setConversacionId] = useState(null);
   
   const estadoInfo = getEstadoInfo(solicitud.estado);
 
@@ -247,35 +247,35 @@ function ModalDetalle({ solicitud, usuario, onClose, onAbrirCalificacion }) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl max-w-4xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col">
         
         {/* Header */}
-        <div className="border-b border-slate-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-2xl font-black text-slate-900">
+        <div className="border-b border-slate-200 p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 leading-tight wrap-break-word">
                 Flete con {solicitud.nombreTransportista}
               </h2>
-              <span className={`inline-block mt-2 px-4 py-2 rounded-full text-sm font-bold ${estadoInfo.bgColor} ${estadoInfo.textColor}`}>
+              <span className={`inline-block mt-2 px-3 py-1.5 rounded-full text-xs font-bold ${estadoInfo.bgColor} ${estadoInfo.textColor}`}>
                 {estadoInfo.icono} {estadoInfo.label}
               </span>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
             >
               <IconX />
             </button>
           </div>
 
           {/* Pestañas */}
-          <div className="flex gap-2 border-b border-slate-200">
+          <div className="flex gap-2 border-b border-slate-200 overflow-x-auto whitespace-nowrap">
             {pestanas.map((pestana) => (
               <button
                 key={pestana.id}
                 onClick={() => setPestanaActiva(pestana.id)}
-                className={`px-4 py-2 font-bold text-sm transition-all border-b-2 ${
+                className={`px-3 py-2 font-bold text-xs sm:text-sm transition-all border-b-2 ${
                   pestanaActiva === pestana.id
                     ? 'border-black text-black'
                     : 'border-transparent text-slate-500 hover:text-slate-700'
@@ -288,24 +288,24 @@ function ModalDetalle({ solicitud, usuario, onClose, onAbrirCalificacion }) {
         </div>
 
         {/* Contenido según pestaña */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5">
           
           {/* PESTAÑA: SEGUIMIENTO */}
           {pestanaActiva === 'seguimiento' && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Mapa */}
               <MapaRuta 
                 origen={solicitud.origen}
                 destino={solicitud.destino}
-                height="400px"
+                height="clamp(200px, 34vh, 300px)"
               />
 
               {/* ==========================================
                    Banner de estado "entregado"
                   ========================================== */}
               {solicitud.estado === 'entregado' && (
-                <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6">
-                  <p className="text-lg font-bold text-green-900 mb-2">
+                <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
+                  <p className="text-base font-bold text-green-900 mb-2">
                     Tu carga fue entregada
                   </p>
                   <p className="text-sm text-green-700 mb-4">
@@ -313,7 +313,7 @@ function ModalDetalle({ solicitud, usuario, onClose, onAbrirCalificacion }) {
                   </p>
                   <button
                     onClick={() => onAbrirCalificacion(solicitud)}
-                    className="w-full px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-all text-lg"
+                    className="w-full px-4 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-all text-sm"
                   >
                     Confirmar y Calificar Servicio
                   </button>
@@ -321,20 +321,20 @@ function ModalDetalle({ solicitud, usuario, onClose, onAbrirCalificacion }) {
               )}
 
               {/* Historial */}
-              <div className="bg-slate-50 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-slate-900 mb-4"> Historial del Servicio</h3>
+              <div className="bg-slate-50 rounded-xl p-4">
+                <h3 className="text-base font-bold text-slate-900 mb-3"> Historial del Servicio</h3>
                 
                 {solicitud.historial && solicitud.historial.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {solicitud.historial.map((item, idx) => {
                       const info = getEstadoInfo(item.estado);
                       return (
-                        <div key={idx} className="flex items-start gap-4">
-                          <div className={`p-3 rounded-lg ${info.bgColor} flex-shrink-0`}>
-                            <span className="text-2xl">{info.icono}</span>
+                        <div key={idx} className="flex items-start gap-3">
+                          <div className={`p-2 rounded-lg ${info.bgColor} shrink-0`}>
+                            <span className="text-xl">{info.icono}</span>
                           </div>
                           <div className="flex-1">
-                            <p className="font-bold text-slate-900">{info.label}</p>
+                            <p className="font-bold text-sm text-slate-900">{info.label}</p>
                             <p className="text-sm text-slate-600">{info.descripcion}</p>
                             <p className="text-xs text-slate-500 mt-1">
                               {item.fecha?.toDate?.()?.toLocaleString('es-HN')}
@@ -352,11 +352,11 @@ function ModalDetalle({ solicitud, usuario, onClose, onAbrirCalificacion }) {
               </div>
 
               {/* Estado actual */}
-              <div className={`rounded-xl p-6 ${estadoInfo.bgColor} border ${estadoInfo.borderColor}`}>
-                <p className={`text-sm font-bold uppercase mb-2 ${estadoInfo.textColor}`}>
+              <div className={`rounded-xl p-4 ${estadoInfo.bgColor} border ${estadoInfo.borderColor}`}>
+                <p className={`text-xs font-bold uppercase mb-1.5 ${estadoInfo.textColor}`}>
                   Estado Actual
                 </p>
-                <p className={`text-xl font-bold ${estadoInfo.textColor}`}>
+                <p className={`text-base sm:text-lg font-bold ${estadoInfo.textColor}`}>
                   {estadoInfo.icono} {estadoInfo.descripcion}
                 </p>
               </div>
@@ -365,43 +365,43 @@ function ModalDetalle({ solicitud, usuario, onClose, onAbrirCalificacion }) {
         
           {/* PESTAÑA: INFORMACIÓN */}
           {pestanaActiva === 'info' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-slate-50 rounded-xl p-6">
-                  <p className="text-sm font-bold text-slate-500 uppercase mb-3">Origen</p>
-                  <p className="text-lg text-slate-900">{solicitud.origen?.direccion}</p>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-slate-50 rounded-xl p-4">
+                  <p className="text-xs font-bold text-slate-500 uppercase mb-2">Origen</p>
+                  <p className="text-sm sm:text-base text-slate-900 wrap-break-word">{solicitud.origen?.direccion}</p>
                 </div>
-                <div className="bg-slate-50 rounded-xl p-6">
-                  <p className="text-sm font-bold text-slate-500 uppercase mb-3">Destino</p>
-                  <p className="text-lg text-slate-900">{solicitud.destino?.direccion}</p>
+                <div className="bg-slate-50 rounded-xl p-4">
+                  <p className="text-xs font-bold text-slate-500 uppercase mb-2">Destino</p>
+                  <p className="text-sm sm:text-base text-slate-900 wrap-break-word">{solicitud.destino?.direccion}</p>
                 </div>
               </div>
 
-              <div className="bg-slate-50 rounded-xl p-6">
-                <p className="text-sm font-bold text-slate-500 uppercase mb-3">Descripción de Carga</p>
-                <p className="text-lg text-slate-900">{solicitud.descripcionCarga}</p>
+              <div className="bg-slate-50 rounded-xl p-4">
+                <p className="text-xs font-bold text-slate-500 uppercase mb-2">Descripción de Carga</p>
+                <p className="text-sm sm:text-base text-slate-900 wrap-break-word">{solicitud.descripcionCarga}</p>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-slate-50 rounded-xl p-4">
                   <p className="text-xs font-bold text-slate-500 uppercase mb-2">Distancia</p>
-                  <p className="text-2xl font-bold text-slate-900">{solicitud.distanciaKm} km</p>
+                  <p className="text-lg sm:text-xl font-bold text-slate-900">{solicitud.distanciaKm} km</p>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-4">
                   <p className="text-xs font-bold text-slate-500 uppercase mb-2">Vehículo</p>
-                  <p className="text-2xl font-bold text-slate-900 capitalize">{solicitud.tipoVehiculo}</p>
+                  <p className="text-lg sm:text-xl font-bold text-slate-900 capitalize">{solicitud.tipoVehiculo}</p>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-4 col-span-2">
                   <p className="text-xs font-bold text-slate-500 uppercase mb-2">Fecha Solicitada</p>
-                  <p className="text-2xl font-bold text-slate-900">
+                  <p className="text-lg sm:text-xl font-bold text-slate-900">
                     {solicitud.fechaSolicitada?.toDate?.()?.toLocaleDateString('es-HN')}
                   </p>
                 </div>
               </div>
 
-              <div className="bg-slate-50 rounded-xl p-6">
-                <p className="text-sm font-bold text-slate-500 uppercase mb-3">Transportista</p>
-                <p className="text-lg font-bold text-slate-900">{solicitud.nombreTransportista}</p>
+              <div className="bg-slate-50 rounded-xl p-4">
+                <p className="text-xs font-bold text-slate-500 uppercase mb-2">Transportista</p>
+                <p className="text-sm sm:text-base font-bold text-slate-900 wrap-break-word">{solicitud.nombreTransportista}</p>
               </div>
             </div>
           )}

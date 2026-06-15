@@ -25,7 +25,6 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
   // Estados existentes para mensajes
   const [mensajes, setMensajes] = useState([]);
   const [nuevoMensaje, setNuevoMensaje] = useState('');
-  const [loading, setLoading] = useState(true);
   const [enviando, setEnviando] = useState(false);
   const [conversacionId, setConversacionId] = useState(null);
   const messagesEndRef = useRef(null);

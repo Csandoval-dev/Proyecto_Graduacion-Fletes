@@ -144,7 +144,7 @@ function MisConversaciones({ usuario }) {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-bold text-slate-900 truncate">
+                      <h3 className="font-bold text-slate-900 wrap-break-word leading-tight pr-2">
                         {conv.nombreTransportista}
                       </h3>
                       <span className="text-xs text-slate-500 font-medium whitespace-nowrap ml-2">

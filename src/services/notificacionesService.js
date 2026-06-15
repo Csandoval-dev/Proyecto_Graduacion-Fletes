@@ -1,20 +1,43 @@
 import { getToken, onMessage } from 'firebase/messaging';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db, getMessagingInstance } from '../firebase/firebase';
+import { db, getMessagingInstance, getMessagingServiceWorkerRegistration } from '../firebase/firebase';
 
 const VAPID_KEY = 'BNZDYKYgu2CmN0-no0xg5Aqzvx6lczSESmJgFerYpybSGZL2BNGz7I08xjXLW1ItnU5fuvPpDGpvb51OmVVS0Sc';
+
+const esSafari = () => {
+  const ua = navigator.userAgent;
+  return /Safari/i.test(ua) && !/Chrome|CriOS|Edg|OPR|Firefox|FxiOS/i.test(ua);
+};
+
+const getContenidoNotificacion = (payload) => {
+  const titulo = payload?.notification?.title || payload?.data?.titulo || 'Fletia HND';
+  const mensaje = payload?.notification?.body || payload?.data?.mensaje || 'Nueva notificación';
+  return { titulo, mensaje };
+};
+
 // Funcion para Solicitar permiso de notifiaciones y obtenr el token FCM
 export const solicitarPermisoNotificaciones = async (usuarioId) => {
   try {
-    if (!('Notification' in window)) return null;
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return null;
+
+    if (esSafari()) {
+      console.warn('Safari (macOS/iOS) no es totalmente compatible con FCM Web. Usa Chrome/Edge/Firefox para pruebas de FCM.');
+    }
+
 // Obtener instancia de messaging
     const messagingInstance = await getMessagingInstance();
     if (!messagingInstance) return null;
 
+    const registration = await getMessagingServiceWorkerRegistration();
+    if (!registration) return null;
+
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') return null;
 
-    const token = await getToken(messagingInstance, { vapidKey: VAPID_KEY });
+    const token = await getToken(messagingInstance, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: registration
+    });
 //Guardar token en Firestore
     if (token) {
       await updateDoc(doc(db, 'usuarios', usuarioId), {
@@ -38,12 +61,11 @@ export const escucharNotificaciones = async (callback) => {
   onMessage(messagingInstance, async (payload) => {
     console.log(' Notificación primer plano:', payload);
 
-    const titulo = payload.data?.titulo || 'Fletia HND';
-    const mensaje = payload.data?.mensaje || 'Nueva notificación';
+    const { titulo, mensaje } = getContenidoNotificacion(payload);
 
     if (Notification.permission === 'granted') {
       try {
-        const registration = await navigator.serviceWorker.getRegistration();
+        const registration = await getMessagingServiceWorkerRegistration();
         if (registration) {
           await registration.showNotification(titulo, {
             body: mensaje,

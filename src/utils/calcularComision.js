@@ -6,8 +6,8 @@
  * @returns {object} Desglose del pago
  */
 export const calcularDesglosePago = (monto) => {
-  // Comisión fija del 15%
-  const COMISION_PORCENTAJE = 15;
+  // Comisión fija del 12%
+  const COMISION_PORCENTAJE = 12;
   //Como se calcula la comision, se multiplica el monto por el porcentaje de comision y se divide entre 100 para obtener el valor de la comision.
   const comisionFletia = monto * (COMISION_PORCENTAJE / 100);
   const pagoTransportista = monto - comisionFletia;

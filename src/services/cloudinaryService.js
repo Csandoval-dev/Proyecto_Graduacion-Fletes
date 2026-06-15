@@ -30,6 +30,7 @@ export const subirArchivo = async (file, folder = "fletia") => {
         body: formData,
       }
     );
+    
 
     const data = await response.json();
 

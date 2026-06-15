@@ -294,6 +294,21 @@ function AprobarTransportistas() {
                       <span className="text-red-500 text-xs font-bold">No subido</span>
                     )}
                   </div>
+                  <div className="flex items-center justify-between bg-white p-3 rounded-lg">
+                    <span className="text-sm font-bold text-slate-700">Permiso IHTT</span>
+                    {selectedTransportista.documentos?.permisoIHTT ? (
+                      <a
+                        href={selectedTransportista.documentos.permisoIHTT}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 hover:text-indigo-800 text-xs font-bold underline"
+                      >
+                        Ver documento
+                      </a>
+                    ) : (
+                      <span className="text-red-500 text-xs font-bold">No subido</span>
+                    )}
+                  </div>
                 </div>
               </div>
 

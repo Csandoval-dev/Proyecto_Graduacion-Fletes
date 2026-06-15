@@ -17,6 +17,7 @@ const IconCheck = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
   </svg>
 );
+
 // Componente principal del perfil del transportista
 function PerfilTransportista() {
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ function PerfilTransportista() {
   const [archivos, setArchivos] = useState({
     licencia: null,
     tarjetaCirculacion: null,
+    permisoIHTT: null,
     fotosVehiculo: []
   });
 
@@ -50,6 +52,7 @@ function PerfilTransportista() {
   const [previews, setPreviews] = useState({
     licencia: null,
     tarjetaCirculacion: null,
+    permisoIHTT: null,
     fotosVehiculo: []
   });
 // Manejar cambios en los campos de texto
@@ -153,7 +156,7 @@ function PerfilTransportista() {
   };
 // Función para validar archivos del Step 3
   const validarStep3 = () => {
-    if (!archivos.licencia || !archivos.tarjetaCirculacion || archivos.fotosVehiculo.length === 0) {
+    if (!archivos.licencia || !archivos.tarjetaCirculacion || !archivos.permisoIHTT || archivos.fotosVehiculo.length === 0) {
       setError("Por favor sube todos los documentos requeridos");
       return false;
     }
@@ -208,9 +211,18 @@ function PerfilTransportista() {
         "vehiculos",
         `vehiculo_${formData.email}`
       );
+      const permisoResult = await subirArchivo(
+        archivos.permisoIHTT,
+        "documentos",
+        `permiso_${formData.email}_${Date.now()}`
+      );
 
       if (!fotosResult.success) {
         throw new Error("Error al subir fotos del vehículo");
+      }
+
+      if (!permisoResult.success) {
+        throw new Error("Error al subir permiso IHTT");
       }
 
       //  Crear documento en Firestore (colección transportistas)
@@ -238,9 +250,11 @@ function PerfilTransportista() {
         },
 
         // Documentos
+      
         documentos: {
           licencia: licenciaResult.url,
-          tarjetaCirculacion: tarjetaResult.url
+          tarjetaCirculacion: tarjetaResult.url,
+          permisoIHTT: permisoResult.url
         },
 
         // Estadísticas iniciales
@@ -555,6 +569,7 @@ function PerfilTransportista() {
                       </div>
                     )}
                   </label>
+                  
                 </div>
               </div>
 
@@ -590,7 +605,38 @@ function PerfilTransportista() {
                   </label>
                 </div>
               </div>
-
+                     {/* Permiso IHTT */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Permiso IHTT* <span className="text-xs text-gray-500">(JPG, PNG o PDF - Max 5MB)</span>
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => handleFileChange(e, 'permisoIHTT')}
+                    className="hidden"
+                    id="permisoIHTT"
+                  />
+                  <label htmlFor="permisoIHTT" className="cursor-pointer">
+                    {previews.permisoIHTT ? (
+                      <div>
+                        {archivos.permisoIHTT?.type === 'application/pdf' ? (
+                          <p className="text-green-600 font-medium">✓ PDF subido</p>
+                        ) : (
+                          <img src={previews.permisoIHTT} alt="Permiso IHTT" className="max-h-48 mx-auto rounded" />
+                        )}
+                        <p className="text-sm text-gray-600 mt-2">{archivos.permisoIHTT?.name}</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <IconUpload className="mx-auto text-gray-400" />
+                        <p className="mt-2 text-sm text-gray-600">Click para subir tu permiso IHTT</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
               {/* Fotos del Vehículo */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

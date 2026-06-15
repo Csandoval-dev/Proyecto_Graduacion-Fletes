@@ -27,21 +27,39 @@ export const analytics = getAnalytics(app);
 export const functions = getFunctions(app, "us-central1");
 
 let messaging = null;
+let swRegistration = null;
 
+export const getMessagingServiceWorkerRegistration = async () => {
+  if (swRegistration) return swRegistration;
+
+  if (!("serviceWorker" in navigator)) return null;
+
+  try {
+    swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    await navigator.serviceWorker.ready;
+    console.log('Service Worker de FCM registrado');
+  } catch (error) {
+    console.error('Error registrando Service Worker de FCM:', error);
+    swRegistration = null;
+  }
+
+  return swRegistration;
+};
+// Función para obtener instancia de Messaging
 export const getMessagingInstance = async () => {
   if (messaging) return messaging;
   
   try {
+    if (typeof window === "undefined") return null;
+
     const supported = await isMessagingSupported();
     if (supported) {
-      //  Registrar SW manualmente
-      await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-      console.log(' Service Worker registrado');
+      await getMessagingServiceWorkerRegistration();
       
       messaging = getMessaging(app);
-      console.log(' Firebase Messaging inicializado');
+      console.log('Firebase Messaging inicializado');
     } else {
-      console.log(' Messaging no soportado');
+      console.warn('Firebase Messaging no soportado en este navegador/dispositivo');
     }
   } catch (error) {
     console.error('Error al inicializar Messaging:', error);

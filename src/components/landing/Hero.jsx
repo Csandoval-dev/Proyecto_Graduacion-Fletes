@@ -1,10 +1,8 @@
 // src/components/landing/Hero.jsx
 import { motion } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export const Hero = () => {
-  const navigate = useNavigate();
-
   return (
     <section 
       id="inicio"
@@ -81,6 +79,7 @@ export const Hero = () => {
                   Soy transportista
                 </button>
               </Link>
+
             </motion.div>
 
             {/* Stats */}
@@ -118,7 +117,7 @@ export const Hero = () => {
                 alt="Transportista profesional"
                 className="w-full h-auto object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+              <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent"></div>
             </div>
 
             {/* Card flotante */}

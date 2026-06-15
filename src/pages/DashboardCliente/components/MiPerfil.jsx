@@ -1,8 +1,17 @@
 // src/pages/DashboardCliente/components/MiPerfil.jsx
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
-// Iconos SVG para el perfil
+
+// ─────────────────────────────────────────────
+// Utilidad: genera iniciales del nombre
+// ─────────────────────────────────────────────
+const getIniciales = (nombre = "") =>
+  nombre.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+
+// ─────────────────────────────────────────────
+// Iconos
+// ─────────────────────────────────────────────
 const IconUser = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -15,96 +24,158 @@ const IconMail = () => (
   </svg>
 );
 
-const IconPhone = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-  </svg>
-);
-
 const IconCheck = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
   </svg>
 );
-// Componente principal del perfil del cliente
+
+const IconCamera = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
+// ─────────────────────────────────────────────
+// Componente principal
+// ─────────────────────────────────────────────
 function MiPerfil({ usuario }) {
-  const [editando, setEditando] = useState(false);
-  const [guardando, setGuardando] = useState(false);
+  const [editando,    setEditando]    = useState(false);
+  const [guardando,   setGuardando]   = useState(false);
+  const [mensaje,     setMensaje]     = useState(null); // { tipo, texto }
+  const [fotoPreview, setFotoPreview] = useState(usuario?.fotoUrl || null);
+  const inputFotoRef = useRef(null);
+
   const [datosEditados, setDatosEditados] = useState({
-    nombre: usuario?.nombre || "",
-    telefono: usuario?.telefono || ""
+    nombre:   usuario?.nombre   || "",
+    telefono: usuario?.telefono || "",
   });
-// Manejar cambios en los campos editables
+
+  // ── Mostrar mensaje de confirmación temporal ──
+  const mostrarMensaje = (tipo, texto) => {
+    setMensaje({ tipo, texto });
+    setTimeout(() => setMensaje(null), 3000);
+  };
+
+  // ── Manejar selección de foto ──
+  const handleFotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      mostrarMensaje("error", "La imagen no debe superar 2MB");
+      return;
+    }
+    setFotoPreview(URL.createObjectURL(file));
+  };
+
+  // ── Manejar cambios en inputs ──
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setDatosEditados(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    alert(" Cambios guardados localmente. Recuerda hacer clic en 'Guardar Cambios' para actualizar tu perfil.");
+    setDatosEditados((prev) => ({ ...prev, [name]: value }));
   };
-// Manejar guardado de cambios en Firestore
+
+  // ── Guardar cambios en Firestore ──
   const handleGuardar = async () => {
+    if (!datosEditados.nombre.trim()) {
+      mostrarMensaje("error", "El nombre no puede estar vacío");
+      return;
+    }
     try {
       setGuardando(true);
-
       const userRef = doc(db, "usuarios", usuario.uid);
       await updateDoc(userRef, {
-        nombre: datosEditados.nombre,
-        telefono: datosEditados.telefono
+        nombre:   datosEditados.nombre.trim(),
+        telefono: datosEditados.telefono.trim(),
       });
-
-      alert(" Perfil actualizado correctamente");
+      mostrarMensaje("exito", "Perfil actualizado correctamente");
       setEditando(false);
-      
-      // Recargar página para actualizar datos en toda la UI
-      window.location.reload();
     } catch (error) {
       console.error("Error al actualizar perfil:", error);
-      alert("Error al guardar cambios");
+      mostrarMensaje("error", "Error al guardar cambios");
     } finally {
       setGuardando(false);
     }
   };
-// Manejar cancelación de edición
+
+  // ── Cancelar y restaurar valores originales ──
   const handleCancelar = () => {
     setDatosEditados({
-      nombre: usuario?.nombre || "",
-      telefono: usuario?.telefono || ""
+      nombre:   usuario?.nombre   || "",
+      telefono: usuario?.telefono || "",
     });
+    setFotoPreview(usuario?.fotoUrl || null);
     setEditando(false);
   };
 
   return (
     <div className="space-y-6">
 
-      {/* Tarjeta principal de perfil */}
+      {/* ── Tarjeta principal ── */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        
-        {/* Header de la tarjeta */}
+
+        {/* Header oscuro — igual que el original */}
         <div className="bg-gradient-to-r from-slate-900 to-slate-700 p-8 text-white">
           <div className="flex items-center gap-6">
-            <div className="bg-white/20 p-6 rounded-2xl backdrop-blur-sm">
-              <IconUser />
+
+            {/* Avatar con foto o iniciales */}
+            <div className="relative flex-shrink-0">
+              <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm border-2 border-white/30 overflow-hidden flex items-center justify-center">
+                {fotoPreview ? (
+                  <img
+                    src={fotoPreview}
+                    alt="Foto de perfil"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-2xl font-black text-white">
+                    {getIniciales(usuario?.nombre)}
+                  </span>
+                )}
+              </div>
+
+              {/* Botón cámara — solo visible en modo edición */}
+              {editando && (
+                <>
+                  <button
+                    onClick={() => inputFotoRef.current?.click()}
+                    className="absolute -bottom-1 -right-1 w-7 h-7 bg-white text-slate-900 rounded-full flex items-center justify-center shadow-lg hover:bg-slate-100 transition-colors"
+                    title="Cambiar foto"
+                  >
+                    <IconCamera />
+                  </button>
+                  <input
+                    ref={inputFotoRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFotoChange}
+                    className="hidden"
+                  />
+                </>
+              )}
             </div>
+
+            {/* Nombre y estado */}
             <div>
               <h2 className="text-2xl font-black">{usuario?.nombre}</h2>
               <p className="text-white/80 flex items-center gap-2 mt-1">
-                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                 Usuario Activo
               </p>
             </div>
           </div>
         </div>
 
-        {/* Contenido del perfil */}
+        {/* Contenido */}
         <div className="p-8">
-          
+
           {/* Información básica */}
           <div className="mb-8">
             <h3 className="text-lg font-bold text-slate-900 mb-4">Información Personal</h3>
-            
+
             <div className="space-y-4">
+
               {/* Nombre */}
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">
@@ -144,7 +215,7 @@ function MiPerfil({ usuario }) {
           {/* Estado de la cuenta */}
           <div className="mb-8">
             <h3 className="text-lg font-bold text-slate-900 mb-4">Estado de la Cuenta</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-green-50 border border-green-200 p-4 rounded-xl">
                 <p className="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">
@@ -161,15 +232,24 @@ function MiPerfil({ usuario }) {
                   Miembro desde
                 </p>
                 <p className="text-lg font-black text-blue-800">
-                  {usuario?.createdAt?.toDate?.()?.toLocaleDateString('es-HN', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
+                  {usuario?.createdAt?.toDate?.()?.toLocaleDateString("es-HN", {
+                    year: "numeric", month: "long", day: "numeric",
                   }) || "Fecha no disponible"}
                 </p>
               </div>
             </div>
           </div>
+
+          {/* Mensaje de confirmación */}
+          {mensaje && (
+            <div className={`rounded-lg p-4 mb-4 ${
+              mensaje.tipo === "exito"
+                ? "bg-green-50 border border-green-200 text-green-800"
+                : "bg-red-50 border border-red-200 text-red-800"
+            }`}>
+              <p className="text-sm font-bold">{mensaje.texto}</p>
+            </div>
+          )}
 
           {/* Botones de acción */}
           <div className="flex gap-4 pt-6 border-t border-slate-200">
@@ -195,20 +275,21 @@ function MiPerfil({ usuario }) {
                 onClick={() => setEditando(true)}
                 className="flex-1 px-6 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition-all"
               >
-                 Editar Perfil
+                ✏️ Editar Perfil
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Información adicional */}
+      {/* Nota de seguridad — igual que el original */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
-        <h3 className="font-bold text-yellow-900 mb-2"> Seguridad de tu cuenta</h3>
+        <h3 className="font-bold text-yellow-900 mb-2">🔒 Seguridad de tu cuenta</h3>
         <p className="text-sm text-yellow-800">
           Tu información está protegida. Solo tú puedes ver y editar tus datos personales.
         </p>
       </div>
+
     </div>
   );
 }

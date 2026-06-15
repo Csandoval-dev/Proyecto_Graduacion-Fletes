@@ -1,3 +1,5 @@
+/* global importScripts, firebase, clients */
+
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
@@ -18,8 +20,8 @@ messaging.onBackgroundMessage((payload) => {
   console.log('[SW] Mensaje recibido:', payload);
 
   // Leer título y mensaje
-  const titulo = payload.notification?.title || 'Fletia HND';
-  const mensaje = payload.notification?.body || 'Nueva notificación';
+  const titulo = payload.notification?.title || payload.data?.titulo || 'Fletia HND';
+  const mensaje = payload.notification?.body || payload.data?.mensaje || 'Nueva notificación';
 
   console.log('[SW] Mostrando notificación:', titulo, mensaje);
 
@@ -32,7 +34,7 @@ messaging.onBackgroundMessage((payload) => {
     requireInteraction: true,
     vibrate: [200, 100, 200],
     data: {
-      url: '/',
+      url: payload.data?.url || '/',
       timestamp: new Date().toISOString()
     }
   };
@@ -65,7 +67,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 //  LOG CUANDO SE INSTALA EL SERVICE WORKER
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   console.log('[SW] Service Worker instalado');
   self.skipWaiting();
 });

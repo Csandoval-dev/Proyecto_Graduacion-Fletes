@@ -191,8 +191,8 @@ function Chat({ conversacionId, usuario, onClose }) {
               <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
                 {(conversacion?.nombreTransportista || 'T').charAt(0)}
               </div>
-              <div>
-                <h3 className="font-black text-xl text-black tracking-tight leading-none mb-1">
+              <div className="min-w-0">
+                <h3 className="font-black text-xl text-black tracking-tight leading-tight mb-1 wrap-break-word">
                   {conversacion?.nombreTransportista}
                 </h3>
                 <div className="flex items-center gap-1.5">

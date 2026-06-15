@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../firebase/firebase';
 import MapSelector from '../../../components/MapSelector';
 
@@ -164,14 +164,14 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[95dvh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-white border-b border-slate-200 p-4 sm:p-6 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-black text-slate-900">Solicitar Flete</h2>
-            <p className="text-slate-600 text-sm mt-1">
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900">Solicitar Flete</h2>
+            <p className="text-slate-600 text-xs sm:text-sm mt-1 break-words">
               A: <span className="font-bold">{transportista?.nombre}</span>
             </p>
           </div>
@@ -185,11 +185,11 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
         </div>
 
         {/* Indicador de pasos */}
-        <div className="px-6 pt-6">
+        <div className="px-4 sm:px-6 pt-4 sm:pt-6">
           <div className="flex items-center justify-between mb-6">
             {[1, 2, 3].map((num) => (
               <div key={num} className="flex items-center flex-1">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors ${
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold transition-colors ${
                   paso >= num ? 'bg-black text-white' : 'bg-slate-200 text-slate-500'
                 }`}>
                   {num}
@@ -202,7 +202,7 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
               </div>
             ))}
           </div>
-          <div className="flex justify-between text-xs font-bold text-slate-600 mb-6">
+          <div className="flex justify-between text-[10px] sm:text-xs font-bold text-slate-600 mb-4 sm:mb-6">
             <span>Origen</span>
             <span>Destino</span>
             <span>Detalles</span>
@@ -210,7 +210,7 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
         </div>
 
         {/* Contenido según el paso */}
-        <div className="p-6">
+        <div className="px-4 pb-4 sm:px-6 sm:pb-6 flex-1 overflow-y-auto">
           
           {/* PASO 1: Seleccionar Origen */}
           {paso === 1 && (
@@ -225,7 +225,7 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
                 direccionTexto={origenTexto}
                 setDireccionTexto={setOrigenTexto}
                 mostrarMiUbicacion={true}
-                height="350px" 
+                height="clamp(220px, 40vh, 350px)" 
               />
             </div>
           )}
@@ -243,7 +243,7 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
                 direccionTexto={destinoTexto}
                 setDireccionTexto={setDestinoTexto}
                 mostrarMiUbicacion={false}
-                height="350px" 
+                height="clamp(220px, 40vh, 350px)" 
               />
             </div>
           )}
@@ -259,14 +259,14 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
                   <span className="text-green-600 font-bold">A</span>
                   <div className="flex-1">
                     <p className="text-xs text-slate-500 font-bold">Origen</p>
-                    <p className="text-sm text-slate-900">{origenTexto}</p>
+                    <p className="text-sm text-slate-900 break-words">{origenTexto}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="text-red-600 font-bold">B</span>
                   <div className="flex-1">
                     <p className="text-xs text-slate-500 font-bold">Destino</p>
-                    <p className="text-sm text-slate-900">{destinoTexto}</p>
+                    <p className="text-sm text-slate-900 break-words">{destinoTexto}</p>
                   </div>
                 </div>
                 {origen && destino && (
@@ -324,7 +324,7 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
         </div>
 
         {/* Footer con botones */}
-        <div className="sticky bottom-0 bg-white border-t border-slate-200 p-6 flex gap-4">
+        <div className="sticky bottom-0 bg-white border-t border-slate-200 p-4 sm:p-6 flex gap-3 sm:gap-4">
           {paso > 1 && (
             <button
               onClick={() => setPaso(paso - 1)}
