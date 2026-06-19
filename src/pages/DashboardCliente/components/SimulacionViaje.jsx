@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Marker, useMap } from "react-leaflet";
 import L from "leaflet";
-import { doc, updateDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
+import { doc, updateDoc, arrayUnion, Timestamp } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
 
-// Ícono del camión emoji, igual estilo que tu ejemplo HTML
 const iconoCamion = new L.DivIcon({
   className: "camion-simulado-marker",
   html: '<div style="font-size:32px; text-align:center; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));">🚚</div>',
@@ -12,133 +11,165 @@ const iconoCamion = new L.DivIcon({
   iconAnchor: [18, 18],
 });
 
-// Interpola linealmente entre dos puntos [lat, lng]
+const iconoPuntoInicio = new L.DivIcon({
+  className: "punto-inicio-marker",
+  html: `<div style="
+    background:#2563eb; color:white; border-radius:50%;
+    width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+    font-weight:bold; font-size:15px; border:3px solid white;
+    box-shadow:0 2px 6px rgba(0,0,0,0.35);
+  ">T</div>`,
+  iconSize: [34, 34],
+  iconAnchor: [17, 17],
+});
+
 function interpolar(a, b, t) {
-  return [
-    a[0] + (b[0] - a[0]) * t,
-    a[1] + (b[1] - a[1]) * t,
-  ];
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 }
 
-// Punto de partida simulado: un poco "alejado" del origen, en una dirección aleatoria leve,
-// solo para que se vea que el camión viene de algún lado antes de llegar al origen.
 function generarPuntoInicial(origen) {
-  const offsetLat = (Math.random() - 0.5) * 0.04; // ~4km de variación
+  const offsetLat = (Math.random() - 0.5) * 0.04;
   const offsetLng = (Math.random() - 0.5) * 0.04;
   return [origen[0] + offsetLat, origen[1] + offsetLng];
 }
 
 /**
- * SimulacionViaje
- * Anima un marcador de camión en línea recta:
- *   puntoInicial -> origen  (tramo 1: "en_camino")
- *   origen -> destino       (tramo 2: después de "recogido")
- * Al llegar a cada punto, actualiza el estado en Firestore automáticamente.
- *
- * Props:
- * - solicitudId: id del documento en la colección "solicitudes"
- * - estadoActual: estado actual de la solicitud (para saber cuándo arrancar)
- * - origen: { lat, lng }
- * - destino: { lat, lng }
+
  */
+let contadorInstancias = 0;
+let instanciaActivaGlobal = null; // compartida entre TODOS los montajes de este componente
+
 function SimulacionViaje({ solicitudId, estadoActual, origen, destino }) {
   const map = useMap();
   const [posicion, setPosicion] = useState(null);
-  const intervaloRef = useRef(null);
-  const yaSimulandoRef = useRef(false); // evita doble-arranque por re-renders
+  const [puntoInicio, setPuntoInicio] = useState(null);
+  const timersRef = useRef([]);
 
   useEffect(() => {
-    // Solo arrancamos la simulación cuando el estado pasa a "en_camino"
-    // y no hay coordenadas completas, no hacemos nada.
     const tieneCoords = origen?.lat && origen?.lng && destino?.lat && destino?.lng;
-    if (estadoActual !== "en_camino" || !tieneCoords || yaSimulandoRef.current) {
+    const enCurso = estadoActual === "en_camino" || estadoActual === "recogido";
+    if (!enCurso || !tieneCoords) {
       return;
     }
 
-    yaSimulandoRef.current = true;
+    contadorInstancias += 1;
+    const miId = contadorInstancias;
+    instanciaActivaGlobal = miId; // este montaje toma el control inmediatamente, desplazando a cualquier anterior
+
+    console.log(`[Simulación #${miId}] 🚚 Motor evaluando — estado actual: "${estadoActual}"`);
+    timersRef.current = [];
+
+    // Soy el dueño actual? Si otro motor más nuevo tomó el control, abortar.
+    const soyDueno = () => instanciaActivaGlobal === miId;
 
     const origenPos  = [origen.lat, origen.lng];
     const destinoPos = [destino.lat, destino.lng];
-    const inicioPos  = generarPuntoInicial(origenPos);
 
-    const actualizarEstadoFirestore = async (nuevoEstado, descripcion) => {
-      try {
-        const ref = doc(db, "solicitudes", solicitudId);
-        await updateDoc(ref, {
-          estado: nuevoEstado,
-          historial: arrayUnion({
-            estado: nuevoEstado,
-            descripcion,
-            fecha: serverTimestamp(),
-          }),
-        });
-      } catch (err) {
-        console.error("Error actualizando estado de simulación:", err);
-      }
-    };
+    const limpiar = (id) => { clearInterval(id); clearTimeout(id); };
 
-    // ── Tramo 1: punto inicial -> origen ──
-    let t = 0;
-    const PASOS_TRAMO_1 = 60;      // cantidad de "frames"
-    const INTERVALO_MS  = 120;     // velocidad de animación
-
-    setPosicion(inicioPos);
-    if (map) map.panTo(inicioPos, { animate: true });
-
-    intervaloRef.current = setInterval(() => {
-      t += 1;
-      const progreso = t / PASOS_TRAMO_1;
-
-      if (progreso >= 1) {
-        // Llegó al origen → marcar como "recogido" en Firestore
-        clearInterval(intervaloRef.current);
-        setPosicion(origenPos);
-        actualizarEstadoFirestore("recogido", "Tu carga fue recogida");
-
-        // Pequeña pausa simulando carga, luego inicia tramo 2
-        setTimeout(() => {
-          iniciarTramo2(origenPos, destinoPos, actualizarEstadoFirestore, map, setPosicion, intervaloRef);
-        }, 2000);
+    const escribirEstado = async (estado, descripcion) => {
+      if (!soyDueno()) {
+        console.log(`[Simulación #${miId}] Abortado antes de escribir "${estado}" (ya no soy el dueño)`);
         return;
       }
-
-      const nuevaPos = interpolar(inicioPos, origenPos, progreso);
-      setPosicion(nuevaPos);
-      if (map) map.panTo(nuevaPos, { animate: true, duration: 0.4 });
-    }, INTERVALO_MS);
-
-    return () => {
-      if (intervaloRef.current) clearInterval(intervaloRef.current);
+      try {
+        console.log(`[Simulación #${miId}] → Firestore: "${estado}"`);
+        const ref = doc(db, "solicitudes", solicitudId);
+        await updateDoc(ref, {
+          estado,
+          historial: arrayUnion({ estado, descripcion, fecha: Timestamp.now() }),
+        });
+        console.log(`[Simulación #${miId}] ✅ Confirmado: "${estado}"`);
+      } catch (err) {
+        console.error(`[Simulación #${miId}] ❌ Error en "${estado}":`, err);
+      }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [estadoActual, origen?.lat, origen?.lng, destino?.lat, destino?.lng, solicitudId]);
 
-  if (!posicion) return null;
+    const animarTramo = (desde, hasta, pasos) => {
+      return new Promise((resolve) => {
+        if (pasos <= 0) {
+          if (soyDueno()) setPosicion(hasta);
+          resolve();
+          return;
+        }
+        let t = 0;
+        const id = setInterval(() => {
+          if (!soyDueno()) { limpiar(id); resolve(); return; }
+          t += 1;
+          const progreso = t / pasos;
+          if (progreso >= 1) {
+            limpiar(id);
+            setPosicion(hasta);
+            resolve();
+            return;
+          }
+          const nuevaPos = interpolar(desde, hasta, progreso);
+          setPosicion(nuevaPos);
+          if (map) map.panTo(nuevaPos, { animate: true, duration: 0.4 });
+        }, 250);
+        timersRef.current.push(id);
+      });
+    };
 
-  return <Marker position={posicion} icon={iconoCamion} />;
-}
+    const esperar = (ms) => new Promise((resolve) => {
+      const id = setTimeout(resolve, ms);
+      timersRef.current.push(id);
+    });
 
-// ── Tramo 2: origen -> destino ──
-function iniciarTramo2(origenPos, destinoPos, actualizarEstadoFirestore, map, setPosicion, intervaloRef) {
-  let t = 0;
-  const PASOS_TRAMO_2 = 90;
-  const INTERVALO_MS  = 120;
+    (async () => {
+      if (estadoActual === "en_camino") {
+        if (!soyDueno()) return;
 
-  intervaloRef.current = setInterval(() => {
-    t += 1;
-    const progreso = t / PASOS_TRAMO_2;
+        const inicioPos = generarPuntoInicial(origenPos);
+        setPuntoInicio(inicioPos);
+        setPosicion(inicioPos);
+        if (map) map.panTo(inicioPos, { animate: true });
 
-    if (progreso >= 1) {
-      clearInterval(intervaloRef.current);
-      setPosicion(destinoPos);
-      actualizarEstadoFirestore("entregado", "Tu carga llegó al destino");
-      return;
-    }
+        await animarTramo(inicioPos, origenPos, 50);
+        if (!soyDueno()) return;
 
-    const nuevaPos = interpolar(origenPos, destinoPos, progreso);
-    setPosicion(nuevaPos);
-    if (map) map.panTo(nuevaPos, { animate: true, duration: 0.4 });
-  }, INTERVALO_MS);
+        await escribirEstado("recogido", "Tu carga fue recogida");
+        if (!soyDueno()) return;
+
+        await esperar(1500);
+        if (!soyDueno()) return;
+
+        await animarTramo(origenPos, destinoPos, 70);
+        if (!soyDueno()) return;
+
+        await escribirEstado("entregado", "Tu carga llegó al destino");
+      }
+
+      if (estadoActual === "recogido") {
+        if (!soyDueno()) return;
+
+        setPosicion(origenPos);
+        if (map) map.panTo(origenPos, { animate: true });
+
+        await animarTramo(origenPos, destinoPos, 70);
+        if (!soyDueno()) return;
+
+        await escribirEstado("entregado", "Tu carga llegó al destino");
+      }
+    })();
+
+    // Cleanup: este montaje deja de ser el dueño SOLO si nadie más nuevo
+    // ya tomó el control (evita pisar a un montaje posterior por error).
+    return () => {
+      timersRef.current.forEach(limpiar);
+      timersRef.current = [];
+      if (instanciaActivaGlobal === miId) {
+        console.log(`[Simulación #${miId}] Desmontado, liberando control`);
+      }
+    };
+  }, [estadoActual, origen?.lat, origen?.lng, destino?.lat, destino?.lng, solicitudId, map]);
+
+  return (
+    <>
+      {puntoInicio && <Marker position={puntoInicio} icon={iconoPuntoInicio} />}
+      {posicion && <Marker position={posicion} icon={iconoCamion} />}
+    </>
+  );
 }
 
 export default SimulacionViaje;

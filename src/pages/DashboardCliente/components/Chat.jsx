@@ -73,6 +73,14 @@ function Chat({ conversacionId, usuario, onClose }) {
     return () => unsubscribe();
   }, [conversacionId]);
 
+  // Marcar conversación como leída por el cliente al abrirla
+  useEffect(() => {
+    if (!conversacionId) return;
+    updateDoc(doc(db, 'conversaciones', conversacionId), {
+      leidoPorCliente: true
+    }).catch(() => {});
+  }, [conversacionId]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -96,7 +104,9 @@ function Chat({ conversacionId, usuario, onClose }) {
       });
       await updateDoc(doc(db, 'conversaciones', conversacionId), {
         ultimoMensaje: nuevoMensaje.trim(),
-        ultimoMensajeTimestamp: serverTimestamp()
+        ultimoMensajeTimestamp: serverTimestamp(),
+        leidoPorCliente: true,
+        leidoPorTransportista: false
       });
       setNuevoMensaje('');
       scrollToBottom();

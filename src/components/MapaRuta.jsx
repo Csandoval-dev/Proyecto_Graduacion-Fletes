@@ -1,4 +1,3 @@
-
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import { useEffect } from 'react';
 import L from 'leaflet';
@@ -49,11 +48,16 @@ function AjustarVista({ origen, destino }) {
   return null;
 }
 
-function MapaRuta({ origen, destino, height = "clamp(220px, 40vh, 360px)", soloMapa = false }) {
-  // Si no hay coordenadas, usar las direcciones como centro aproximado
+/**
+ * MapaRuta
+ * Prop nueva: `children` — permite inyectar elementos extra de react-leaflet
+ * (ej. el marcador animado de SimulacionViaje) sin tocar este componente
+ * cada vez que se necesite algo nuevo encima del mapa.
+ */
+function MapaRuta({ origen, destino, height = "clamp(220px, 40vh, 360px)", soloMapa = false, children }) {
   const origenPos = origen?.lat && origen?.lng 
     ? [origen.lat, origen.lng] 
-    : [15.5050, -88.0250]; // San Pedro Sula por defecto
+    : [15.5050, -88.0250];
 
   const destinoPos = destino?.lat && destino?.lng 
     ? [destino.lat, destino.lng] 
@@ -61,7 +65,6 @@ function MapaRuta({ origen, destino, height = "clamp(220px, 40vh, 360px)", soloM
 
   const hayCoordenadasCompletas = origen?.lat && destino?.lat;
 
-  // Modo solo mapa: renderiza únicamente el MapContainer llenando el contenedor padre
   if (soloMapa) {
     return (
       <div style={{ height, width: '100%' }} className="overflow-hidden">
@@ -81,14 +84,15 @@ function MapaRuta({ origen, destino, height = "clamp(220px, 40vh, 360px)", soloM
               <Marker position={destinoPos} icon={iconoDestino} />
               <Polyline
                 positions={[origenPos, destinoPos]}
-                color="#000000"
-                weight={3}
-                opacity={0.7}
-                dashArray="10, 10"
+                color="#2563eb"
+                weight={4}
+                opacity={0.75}
               />
               <AjustarVista origen={origen} destino={destino} />
             </>
           )}
+          {/* Contenido extra inyectado, ej: marcador animado de la simulación */}
+          {children}
         </MapContainer>
       </div>
     );
@@ -96,7 +100,6 @@ function MapaRuta({ origen, destino, height = "clamp(220px, 40vh, 360px)", soloM
 
   return (
     <div className="space-y-2.5 sm:space-y-3">
-      {/* Info de direcciones */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
           <div className="flex items-start gap-2">
@@ -117,7 +120,6 @@ function MapaRuta({ origen, destino, height = "clamp(220px, 40vh, 360px)", soloM
         </div>
       </div>
 
-      {/* Mapa */}
       <div className="rounded-lg overflow-hidden border border-slate-300">
         <MapContainer
           center={origenPos}
@@ -130,24 +132,20 @@ function MapaRuta({ origen, destino, height = "clamp(220px, 40vh, 360px)", soloM
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           
-          {/* Marcadores */}
           {hayCoordenadasCompletas && (
             <>
               <Marker position={origenPos} icon={iconoOrigen} />
               <Marker position={destinoPos} icon={iconoDestino} />
-              
-              {/* Línea de ruta */}
               <Polyline 
                 positions={[origenPos, destinoPos]} 
-                color="#000000"
-                weight={3}
-                opacity={0.7}
-                dashArray="10, 10"
+                color="#2563eb"
+                weight={4}
+                opacity={0.75}
               />
-              
               <AjustarVista origen={origen} destino={destino} />
             </>
           )}
+          {children}
         </MapContainer>
       </div>
 

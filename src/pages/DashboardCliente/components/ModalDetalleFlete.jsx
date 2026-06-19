@@ -1,11 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "../../../firebase/firebase";
 import { getEstadoInfo } from "../../../constants/estadosFlete";
 import MapaRuta from "../../../components/MapaRuta";
+import SimulacionViaje from "./SimulacionViaje";
 
 const IconX = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 18L18 6M6 6l12 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const IconMenu = () => (
+  <svg className="w-5 h-5" fill="none" stroke="white" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
   </svg>
 );
 const IconPin = () => (
@@ -38,11 +46,35 @@ const ORDEN_ESTADO = {
   en_camino: 3, recogido: 4, entregado: 5, finalizado: 5,
 };
 
-// Altura base del modal en desktop (px exactos porque Leaflet los necesita)
-const MODAL_H_DESKTOP = 620;
+const MODAL_H_DESKTOP = 820;
 const FOOTER_H = 56;
 
-function ModalDetalleFlete({ solicitud, onClose, onAbrirCalificacion }) {
+function ModalDetalleFlete({ solicitud: solicitudInicial, onClose, onAbrirCalificacion }) {
+  // ── Estado propio en tiempo real ──
+  // En vez de quedarnos solo con la prop "solicitudInicial" (que es un snapshot
+  // congelado del momento en que se abrió el modal), escuchamos el documento
+  // directamente desde aquí. Así, cuando SimulacionViaje actualiza Firestore
+  // (recogido, entregado), este modal se entera al instante y el timeline,
+  // el overlay y el footer se actualizan solos — sin esto, el modal nunca
+  // "ve" los cambios que la simulación va guardando.
+  const [solicitud, setSolicitud] = useState(solicitudInicial);
+  const [showPanel, setShowPanel] = useState(false);
+
+  useEffect(() => {
+    if (!solicitudInicial?.id) return;
+
+    const ref = doc(db, "solicitudes", solicitudInicial.id);
+    const unsubscribe = onSnapshot(ref, (snap) => {
+      if (snap.exists()) {
+        setSolicitud({ id: snap.id, ...snap.data() });
+      }
+    }, (error) => {
+      console.error("[ModalDetalleFlete] Error escuchando la solicitud:", error);
+    });
+
+    return () => unsubscribe();
+  }, [solicitudInicial?.id]);
+
   const estadoInfo  = getEstadoInfo(solicitud.estado);
   const pasoActual  = ORDEN_ESTADO[solicitud.estado] ?? 0;
   const tieneFooter = solicitud.estado === 'entregado';
@@ -51,7 +83,6 @@ function ModalDetalleFlete({ solicitud, onClose, onAbrirCalificacion }) {
   const iniciales = (solicitud.nombreTransportista || 'T')
     .split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
-  // Bloquear scroll del body mientras el modal está abierto
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -59,42 +90,53 @@ function ModalDetalleFlete({ solicitud, onClose, onAbrirCalificacion }) {
   }, []);
 
   const modal = (
-    // Backdrop — mobile-first: sin padding en mobile (modal full screen),
-    // padding y centrado en sm+ (modal flotante)
     <div
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       className="fixed inset-0 z-[999999] bg-black/70 flex items-end sm:items-center justify-center p-0 sm:p-5"
     >
-      {/* Contenedor modal:
-          - mobile: full screen (w-full h-full), sin bordes redondeados
-          - sm+: tamaño fijo centrado con bordes redondeados */}
       <div
         className="relative bg-white w-full h-full sm:h-auto sm:rounded-2xl sm:max-w-4xl flex flex-col overflow-hidden shadow-2xl"
         style={{
-          // En desktop forzamos altura en px (Leaflet la necesita exacta).
-          // En mobile dejamos que tome 100% del viewport via las clases h-full arriba.
           height: window.innerWidth >= 640 ? `${MODAL_H_DESKTOP}px` : undefined,
           maxHeight: window.innerWidth >= 640 ? 'calc(100vh - 40px)' : '100%',
         }}
       >
 
-        {/* Botón cerrar — flotante arriba a la derecha de todo el modal */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-[2000] w-9 h-9 bg-black text-white rounded-xl flex items-center justify-center hover:bg-slate-800 transition-colors shadow-lg"
+          className="absolute top-3 right-3 z-[2000] w-9 h-9 min-w-[36px] min-h-[36px] bg-black/75 text-white rounded-xl flex items-center justify-center hover:bg-black transition-colors shadow-lg shrink-0"
+          type="button"
+          aria-label="Cerrar"
         >
           <IconX />
         </button>
 
-        {/* ── Cuerpo: panel izq + mapa ──
-            mobile-first: columna (panel arriba, mapa abajo, scrollable)
-            sm+: fila (panel a la izq, mapa a la derecha) */}
-        <div className="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0">
+        <div className="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0 relative">
 
-          {/* Panel izquierdo */}
-          <div className="w-full sm:w-72 shrink-0 flex flex-col border-b sm:border-b-0 sm:border-r border-slate-200 overflow-y-auto bg-white max-h-[45vh] sm:max-h-none">
+          {/* Overlay para cerrar el panel en mobile */}
+          {showPanel && (
+            <div
+              className="sm:hidden absolute inset-0 z-10 bg-black/40"
+              onClick={() => setShowPanel(false)}
+            />
+          )}
 
-            {/* Avatar + nombre */}
+          {/* Panel izquierdo - desktop: sidebar | mobile: bottom drawer */}
+          <div className={`
+            absolute bottom-0 left-0 right-0 z-20
+            sm:relative sm:bottom-auto sm:left-auto sm:right-auto sm:z-auto
+            w-full sm:w-72 sm:shrink-0 flex flex-col
+            bg-white rounded-t-2xl sm:rounded-none shadow-2xl sm:shadow-none
+            border-t sm:border-t-0 sm:border-r border-slate-200
+            max-h-[72vh] sm:max-h-none overflow-y-auto
+            transition-transform duration-300 ease-in-out
+            ${showPanel ? 'translate-y-0' : 'translate-y-full sm:translate-y-0'}
+          `}>
+            {/* Handle visual - solo mobile */}
+            <div className="sm:hidden flex justify-center pt-2 pb-1 shrink-0">
+              <div className="w-10 h-1 bg-slate-300 rounded-full" />
+            </div>
+
             <div className="flex items-center gap-3 px-4 sm:px-5 py-4 pr-14 border-b border-slate-100 shrink-0">
               <div className="w-11 h-11 rounded-full bg-slate-800 flex items-center justify-center text-white font-black text-base shrink-0">
                 {iniciales}
@@ -105,7 +147,6 @@ function ModalDetalleFlete({ solicitud, onClose, onAbrirCalificacion }) {
               </div>
             </div>
 
-            {/* Precio acordado — solo si existe */}
             {tienePrecio && (
               <div className="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
                 <span className="text-xs font-semibold text-slate-500">Precio acordado</span>
@@ -115,7 +156,7 @@ function ModalDetalleFlete({ solicitud, onClose, onAbrirCalificacion }) {
               </div>
             )}
 
-            {/* Timeline */}
+            {/* Timeline — ahora reactivo a los cambios en tiempo real */}
             <div className="px-4 sm:px-5 py-4 flex-1">
               {PASOS_VIAJE.map((paso, idx) => {
                 const completado = idx < pasoActual;
@@ -161,7 +202,6 @@ function ModalDetalleFlete({ solicitud, onClose, onAbrirCalificacion }) {
               })}
             </div>
 
-            {/* Info flete */}
             <div className="px-4 sm:px-5 pb-4 pt-3 border-t border-slate-100 space-y-2 shrink-0">
               <div className="flex items-start gap-2 text-xs">
                 <span className="text-green-600 mt-0.5"><IconPin /></span>
@@ -194,11 +234,20 @@ function ModalDetalleFlete({ solicitud, onClose, onAbrirCalificacion }) {
             </div>
           </div>
 
-          {/* Panel derecho: mapa — en mobile toma el resto del alto disponible (flex-1) */}
-          <div className="flex-1 relative min-h-[260px] sm:min-h-0 overflow-hidden">
+          {/* Panel derecho: mapa */}
+          <div className="flex-1 relative min-h-0 overflow-hidden">
 
-            {/* Overlay estado — desplazado para no chocar con controles +/- de Leaflet */}
-            <div className="absolute top-3 left-14 right-3 z-[1000] pointer-events-none">
+            {/* Botón hamburguesa - solo mobile */}
+            <button
+              onClick={() => setShowPanel(v => !v)}
+              className="absolute top-3 left-3 z-[1001] sm:hidden w-9 h-9 bg-black/75 text-white rounded-xl shadow-lg flex items-center justify-center hover:bg-black transition-colors"
+              type="button"
+              aria-label="Ver detalles del flete"
+            >
+              <IconMenu />
+            </button>
+
+            <div className="absolute top-3 left-14 right-14 sm:left-14 sm:right-3 z-[1000] pointer-events-none">
               <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-md px-4 py-3">
                 <p className={`text-sm font-black ${estadoInfo.textColor}`}>
                   {estadoInfo.label}
@@ -207,19 +256,27 @@ function ModalDetalleFlete({ solicitud, onClose, onAbrirCalificacion }) {
               </div>
             </div>
 
-            {/* Mapa — llena el panel con absolute inset-0 */}
             <div className="absolute inset-0">
               <MapaRuta
                 origen={solicitud.origen}
                 destino={solicitud.destino}
                 height="100%"
                 soloMapa
-              />
+              >
+                {/* estadoActual ahora viene del estado reactivo (onSnapshot propio),
+                    no de la prop congelada — así SimulacionViaje también reacciona
+                    correctamente si el estado cambia desde fuera */}
+                <SimulacionViaje
+                  solicitudId={solicitud.id}
+                  estadoActual={solicitud.estado}
+                  origen={solicitud.origen}
+                  destino={solicitud.destino}
+                />
+              </MapaRuta>
             </div>
           </div>
         </div>
 
-        {/* Footer calificación */}
         {tieneFooter && (
           <div className="shrink-0 px-4 sm:px-5 py-3 border-t border-slate-200 bg-green-50">
             <button

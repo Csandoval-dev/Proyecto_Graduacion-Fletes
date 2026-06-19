@@ -80,6 +80,14 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
     return () => unsubscribe();
   }, [conversacionId]);
 
+  // Marcar conversación como leída por el transportista al abrirla
+  useEffect(() => {
+    if (!conversacionId) return;
+    updateDoc(doc(db, 'conversaciones', conversacionId), {
+      leidoPorTransportista: true
+    }).catch(() => {});
+  }, [conversacionId]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -107,7 +115,9 @@ function ChatTransportista({ solicitud, usuario, onClose }) {
       const convRef = doc(db, 'conversaciones', conversacionId);
       await updateDoc(convRef, {
         ultimoMensaje: textoMensaje,
-        ultimoMensajeTimestamp: serverTimestamp()
+        ultimoMensajeTimestamp: serverTimestamp(),
+        leidoPorTransportista: true,
+        leidoPorCliente: false
       });
 
       setNuevoMensaje('');

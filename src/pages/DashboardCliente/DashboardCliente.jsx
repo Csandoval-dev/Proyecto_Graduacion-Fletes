@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { cerrarSesion } from "../../services/authService";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "../../firebase/firebase";
 import MisFletes from "./components/MisFletes";
 import ModalDetalleFlete from "./components/ModalDetalleFlete";
 import ModalCalificacion from "../../components/ModalCalificacion";
@@ -65,6 +67,21 @@ function DashboardCliente() {
   const { userData: usuario, loading } = useAuth();
   const [activeTab, setActiveTab] = useState("inicio");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [hayMensajesNuevos, setHayMensajesNuevos] = useState(false);
+
+  // Escuchar conversaciones con mensajes no leídos por el cliente
+  useEffect(() => {
+    if (!usuario?.uid) return;
+    const q = query(
+      collection(db, 'conversaciones'),
+      where('participantes', 'array-contains', usuario.uid),
+      where('leidoPorCliente', '==', false)
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setHayMensajesNuevos(!snap.empty);
+    });
+    return () => unsub();
+  }, [usuario?.uid]);
 
   // ── Estado de modales elevado aquí, fuera de todo overflow ──
   const [detalleAbierto, setDetalleAbierto] = useState(null);
@@ -137,7 +154,12 @@ function DashboardCliente() {
                 activeTab === item.id ? 'bg-black text-white shadow-lg' : 'text-slate-700 hover:bg-slate-100'
               }`}
             >
-              {item.icon}
+              <span className="relative">
+                {item.icon}
+                {item.id === 'conversaciones' && hayMensajesNuevos && activeTab !== 'conversaciones' && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                )}
+              </span>
               <span>{item.label}</span>
             </button>
           ))}

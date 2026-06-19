@@ -71,6 +71,8 @@ function DashboardTransportista() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("inicio");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [haySolicitudesNuevas, setHaySolicitudesNuevas] = useState(false);
+  const [hayMensajesNuevos, setHayMensajesNuevos] = useState(false);
 //Funcion para cargar el perfil del transportista al iniciar el componenete, verificando si el usuario esta autenticado,
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -112,6 +114,34 @@ function DashboardTransportista() {
       console.error("Error al cerrar sesión:", error);
     }
   };
+
+  // Escuchar solicitudes pendientes nuevas
+  useEffect(() => {
+    if (!perfil?.uid) return;
+    const q = query(
+      collection(db, 'solicitudes'),
+      where('transportistaId', '==', perfil.uid),
+      where('estado', '==', 'pendiente')
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setHaySolicitudesNuevas(!snap.empty);
+    });
+    return () => unsub();
+  }, [perfil?.uid]);
+
+  // Escuchar conversaciones con mensajes no leídos por el transportista
+  useEffect(() => {
+    if (!perfil?.uid) return;
+    const q = query(
+      collection(db, 'conversaciones'),
+      where('participantes', 'array-contains', perfil.uid),
+      where('leidoPorTransportista', '==', false)
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setHayMensajesNuevos(!snap.empty);
+    });
+    return () => unsub();
+  }, [perfil?.uid]);
 
   if (loading) {
     return (
@@ -179,7 +209,12 @@ function DashboardTransportista() {
                 }
               `}
             >
-              {item.icon}
+              <span className="relative">
+                {item.icon}
+                {item.id === 'solicitudes' && (haySolicitudesNuevas || hayMensajesNuevos) && activeTab !== 'solicitudes' && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                )}
+              </span>
               <span>{item.label}</span>
             </button>
           ))}
