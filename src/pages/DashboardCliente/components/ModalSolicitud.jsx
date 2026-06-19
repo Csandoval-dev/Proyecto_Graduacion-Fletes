@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../../firebase/firebase';
 import MapSelector from '../../../components/MapSelector';
 
@@ -54,6 +54,19 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
 
     try {
       setLoading(true);
+
+      // Verificar si el usuario ya tiene una solicitud activa
+      const solicitudActivaQuery = query(
+        collection(db, 'solicitudes'),
+        where('usuarioId', '==', usuario.uid),
+        where('estado', 'in', ['pendiente', 'aceptada', 'en_camino', 'recogido'])
+      );
+      const solicitudActivaSnap = await getDocs(solicitudActivaQuery);
+      if (!solicitudActivaSnap.empty) {
+        alert('Ya tienes una solicitud de flete activa. Espera a que finalice antes de crear una nueva.');
+        setLoading(false);
+        return;
+      }
 
       const distanciaKm = origen && destino ? calcularDistancia(origen, destino) : 0;
 
@@ -132,7 +145,7 @@ function ModalSolicitud({ isOpen, onClose, transportista, usuario, onSuccess }) 
       }
 
       alert('Solicitud enviada correctamente');
-      onSuccess && onSuccess(solicitudRef.id);
+      onSuccess && onSuccess(conversacionRef.id);
       onClose();
       
       // Resetear formulario

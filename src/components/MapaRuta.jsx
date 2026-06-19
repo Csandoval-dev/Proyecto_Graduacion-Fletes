@@ -49,7 +49,7 @@ function AjustarVista({ origen, destino }) {
   return null;
 }
 
-function MapaRuta({ origen, destino, height = "clamp(220px, 40vh, 360px)" }) {
+function MapaRuta({ origen, destino, height = "clamp(220px, 40vh, 360px)", soloMapa = false }) {
   // Si no hay coordenadas, usar las direcciones como centro aproximado
   const origenPos = origen?.lat && origen?.lng 
     ? [origen.lat, origen.lng] 
@@ -60,6 +60,39 @@ function MapaRuta({ origen, destino, height = "clamp(220px, 40vh, 360px)" }) {
     : [15.5050, -88.0250];
 
   const hayCoordenadasCompletas = origen?.lat && destino?.lat;
+
+  // Modo solo mapa: renderiza únicamente el MapContainer llenando el contenedor padre
+  if (soloMapa) {
+    return (
+      <div style={{ height, width: '100%' }} className="overflow-hidden">
+        <MapContainer
+          center={origenPos}
+          zoom={13}
+          style={{ height: '100%', width: '100%' }}
+          scrollWheelZoom={true}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {hayCoordenadasCompletas && (
+            <>
+              <Marker position={origenPos} icon={iconoOrigen} />
+              <Marker position={destinoPos} icon={iconoDestino} />
+              <Polyline
+                positions={[origenPos, destinoPos]}
+                color="#000000"
+                weight={3}
+                opacity={0.7}
+                dashArray="10, 10"
+              />
+              <AjustarVista origen={origen} destino={destino} />
+            </>
+          )}
+        </MapContainer>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-2.5 sm:space-y-3">

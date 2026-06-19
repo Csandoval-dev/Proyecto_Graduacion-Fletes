@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
 import { db } from "../../../firebase/firebase";
 import ModalSolicitud from "./ModalSolicitud";
 
@@ -47,14 +47,17 @@ const IconFilter = () => (
   </svg>
 );
 // Componente principal
-function BuscarTransportistas({ usuario }) {
+function BuscarTransportistas({ usuario, onNavigate }) {
   const [transportistas, setTransportistas] = useState([]);
   const [transportistasFiltrados, setTransportistasFiltrados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTransportista, setSelectedTransportista] = useState(null);
   const [modalSolicitudOpen, setModalSolicitudOpen] = useState(false);
   const [transportistaParaSolicitud, setTransportistaParaSolicitud] = useState(null);
-  
+  const [reseñas, setReseñas] = useState([]);
+  const [loadingReseñas, setLoadingReseñas] = useState(false);
+  const [fotoVehiculoIdx, setFotoVehiculoIdx] = useState(0);
+
   // Filtros
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroZona, setFiltroZona] = useState("todas");
@@ -134,13 +137,36 @@ function BuscarTransportistas({ usuario }) {
 
   // Obtener tipos de vehículos únicos
   const tiposVehiculo = [...new Set(transportistas.map(t => t.vehiculo?.tipo).filter(Boolean))];
+// Cargar reseñas del transportista
+  const cargarReseñas = async (transportistaId) => {
+    try {
+      setLoadingReseñas(true);
+      const q = query(
+        collection(db, 'reseñas'),
+        where('transportistaId', '==', transportistaId),
+        orderBy('fecha', 'desc'),
+        limit(10)
+      );
+      const snap = await getDocs(q);
+      setReseñas(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (err) {
+      console.error('Error cargando reseñas:', err);
+      setReseñas([]);
+    } finally {
+      setLoadingReseñas(false);
+    }
+  };
+
 //  Funciones para manejar el perfil detallado y la solicitud de contacto
   const abrirPerfil = (transportista) => {
     setSelectedTransportista(transportista);
+    setFotoVehiculoIdx(0);
+    cargarReseñas(transportista.id);
   };
 // Cerrar perfil
   const cerrarPerfil = () => {
     setSelectedTransportista(null);
+    setReseñas([]);
   };
 // Abrir modal de solicitud de contacto
   const contactarTransportista = (transportista) => {
@@ -149,13 +175,9 @@ function BuscarTransportistas({ usuario }) {
     cerrarPerfil();
   };
 // Manejar éxito en la creación de solicitud
-  const handleSolicitudSuccess = (solicitudId) => {
-    alert(' Solicitud creada exitosamente. ¡Puedes chatear con el transportista en "Mis Conversaciones"!');
-    // Opcional: Redirigir a Mis Conversaciones
+  const handleSolicitudSuccess = () => {
     setModalSolicitudOpen(false);
-
-    // Aquí podrías agregar lógica para abrir el chat directamente con el transportista
-     
+    onNavigate && onNavigate("conversaciones");
   };
 
   if (loading) {
@@ -404,13 +426,27 @@ function BuscarTransportistas({ usuario }) {
             
             {/* Header del modal */}
             <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-black text-slate-900">
-                  {selectedTransportista.nombre}
-                </h2>
-                <p className="text-slate-600 flex items-center gap-2 mt-1">
-                   {selectedTransportista.zona}
-                </p>
+              <div className="flex items-center gap-4">
+                {/* Foto de perfil */}
+                {selectedTransportista.fotoPerfil ? (
+                  <img
+                    src={selectedTransportista.fotoPerfil}
+                    alt={selectedTransportista.nombre}
+                    className="w-14 h-14 rounded-full object-cover border-2 border-slate-200"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center text-2xl font-black text-slate-500">
+                    {selectedTransportista.nombre?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900">
+                    {selectedTransportista.nombre}
+                  </h2>
+                  <p className="text-slate-600 flex items-center gap-2 mt-1">
+                     {selectedTransportista.zona}
+                  </p>
+                </div>
               </div>
               <button
                 onClick={cerrarPerfil}
@@ -450,6 +486,46 @@ function BuscarTransportistas({ usuario }) {
                   {selectedTransportista.serviciosCompletados || 0} servicios completados
                 </p>
               </div>
+
+              {/* Fotos del vehículo */}
+              {selectedTransportista.vehiculo?.fotos?.length > 0 && (
+                <div>
+                  <h3 className="font-bold text-slate-900 mb-3">Fotos del Vehículo</h3>
+                  <div className="relative rounded-xl overflow-hidden bg-slate-100" style={{height: '200px'}}>
+                    <img
+                      src={selectedTransportista.vehiculo.fotos[fotoVehiculoIdx]}
+                      alt="Vehículo"
+                      className="w-full h-full object-cover"
+                    />
+                    {selectedTransportista.vehiculo.fotos.length > 1 && (
+                      <>
+                        <div className="absolute bottom-2 right-2 flex gap-1">
+                          {selectedTransportista.vehiculo.fotos.map((_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setFotoVehiculoIdx(i)}
+                              className={`w-2.5 h-2.5 rounded-full transition-all ${
+                                i === fotoVehiculoIdx ? 'bg-white scale-125' : 'bg-white/50'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => setFotoVehiculoIdx(i => Math.max(0, i - 1))}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/60 transition"
+                        >&#8249;</button>
+                        <button
+                          onClick={() => setFotoVehiculoIdx(i => Math.min(selectedTransportista.vehiculo.fotos.length - 1, i + 1))}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/60 transition"
+                        >&#8250;</button>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1 text-right">
+                    {fotoVehiculoIdx + 1} / {selectedTransportista.vehiculo.fotos.length}
+                  </p>
+                </div>
+              )}
 
               {/* Descripción */}
               {selectedTransportista.descripcion && (
@@ -504,6 +580,40 @@ function BuscarTransportistas({ usuario }) {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Reseñas */}
+              <div>
+                <h3 className="font-bold text-slate-900 mb-3">
+                  Comentarios ({reseñas.length})
+                </h3>
+                {loadingReseñas ? (
+                  <div className="flex justify-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-black border-t-transparent"></div>
+                  </div>
+                ) : reseñas.length === 0 ? (
+                  <div className="bg-slate-50 rounded-xl p-6 text-center">
+                    <p className="text-slate-500 text-sm">Aún no hay comentarios para este transportista.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {reseñas.map(r => (
+                      <div key={r.id} className="bg-slate-50 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-slate-800 text-sm">{r.clienteNombre}</span>
+                          <div className="flex text-yellow-400">
+                            {[1,2,3,4,5].map(s => (
+                              <IconStar key={s} filled={s <= r.estrellas} />
+                            ))}
+                          </div>
+                        </div>
+                        {r.comentario && (
+                          <p className="text-slate-600 text-sm leading-relaxed">{r.comentario}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Nota sobre contacto */}

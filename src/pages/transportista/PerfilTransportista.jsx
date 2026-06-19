@@ -42,6 +42,7 @@ function PerfilTransportista() {
 
   // Archivos
   const [archivos, setArchivos] = useState({
+    fotoPerfil: null,
     licencia: null,
     tarjetaCirculacion: null,
     permisoIHTT: null,
@@ -50,6 +51,7 @@ function PerfilTransportista() {
 
   // Preview de archivos
   const [previews, setPreviews] = useState({
+    fotoPerfil: null,
     licencia: null,
     tarjetaCirculacion: null,
     permisoIHTT: null,
@@ -205,6 +207,17 @@ function PerfilTransportista() {
         throw new Error("Error al subir tarjeta de circulación");
       }
 
+      // Subir foto de perfil (opcional)
+      let fotoPerfilUrl = null;
+      if (archivos.fotoPerfil) {
+        const fotoPerfilResult = await subirArchivo(
+          archivos.fotoPerfil,
+          "perfiles",
+          `perfil_${formData.email}_${Date.now()}`
+        );
+        if (fotoPerfilResult.success) fotoPerfilUrl = fotoPerfilResult.url;
+      }
+
       //  Subir fotos del vehículo
       const fotosResult = await subirMultiplesArchivos(
         archivos.fotosVehiculo,
@@ -233,6 +246,7 @@ function PerfilTransportista() {
         telefono: formData.telefono,
         zona: formData.zona,
         descripcion: formData.descripcion,
+        fotoPerfil: fotoPerfilUrl,
         
         // Estado
         disponible: true,
@@ -349,7 +363,41 @@ function PerfilTransportista() {
           {step === 1 && (
             <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 space-y-4">
               <h2 className="text-lg font-semibold mb-4 border-b pb-2">Información Personal</h2>
-              
+
+              {/* Foto de perfil */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Foto de Perfil <span className="text-xs text-gray-500">(JPG o PNG - Max 5MB)</span>
+                </label>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center shrink-0">
+                    {previews.fotoPerfil ? (
+                      <img src={previews.fotoPerfil} alt="Perfil" className="w-full h-full object-cover" />
+                    ) : (
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/jpg"
+                      onChange={(e) => handleFileChange(e, 'fotoPerfil')}
+                      className="hidden"
+                      id="fotoPerfil"
+                    />
+                    <label
+                      htmlFor="fotoPerfil"
+                      className="cursor-pointer inline-block px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      {previews.fotoPerfil ? 'Cambiar foto' : 'Subir foto'}
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1">Opcional. Aparece en tu perfil público.</p>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo *</label>
                 <input

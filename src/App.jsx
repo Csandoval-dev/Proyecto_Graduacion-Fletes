@@ -4,6 +4,7 @@ import { auth } from "./firebase/firebase";
 import React, { useEffect, useRef } from 'react'; 
 // Configuración de Cloud Messaging
 import { solicitarPermisoNotificaciones, escucharNotificaciones } from './services/notificacionesService';
+import { AuthProvider } from "./context/AuthContext";
 import Landing from "./pages/landing/Landing";
 import Login from "./pages/login/login";
 import Register from "./pages/registro/register";
@@ -37,7 +38,8 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
@@ -54,7 +56,8 @@ function App() {
 
         <Route path="*" element={<Landing />} />
       </Routes>
-    </BrowserRouter>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

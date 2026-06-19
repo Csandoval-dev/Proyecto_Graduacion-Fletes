@@ -1,26 +1,18 @@
 @import "tailwindcss";
 
-
-
 :root {
-  /* Tipografía - Arial como principal */
   font-family: Arial, sans-serif;
   line-height: 1.6;
   font-weight: 400;
-
-  /* Solo modo claro (profesional) */
   color-scheme: light;
   color: #000000;
   background-color: #ffffff;
-
-  /* Optimizaciones de rendering */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Body optimizado para landing page */
 body {
   margin: 0;
   padding: 0;
@@ -28,44 +20,22 @@ body {
   min-height: 100vh;
   background-color: #ffffff;
   color: #000000;
-  display: block; /* Cambio de flex para permitir scroll natural */
+  display: block;
+  /* overflow-x:hidden QUITADO de aquí — rompía position:fixed de los modales */
 }
 
-/* Links profesionales */
 a {
   font-weight: 500;
   color: inherit;
   text-decoration: none;
   transition: color 0.3s ease;
 }
+a:hover { color: #000000; }
 
-a:hover {
-  color: #000000;
-}
+h1 { font-size: 3.2em; line-height: 1.1; font-weight: 700; color: #000000; }
+h2 { font-size: 2.5em; line-height: 1.2; font-weight: 700; color: #000000; }
+h3 { font-size: 1.8em; line-height: 1.3; font-weight: 700; color: #000000; }
 
-/* Títulos */
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-  font-weight: 700;
-  color: #000000;
-}
-
-h2 {
-  font-size: 2.5em;
-  line-height: 1.2;
-  font-weight: 700;
-  color: #000000;
-}
-
-h3 {
-  font-size: 1.8em;
-  line-height: 1.3;
-  font-weight: 700;
-  color: #000000;
-}
-
-/* Botones profesionales estilo Uber */
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -78,29 +48,22 @@ button {
   cursor: pointer;
   transition: all 0.3s ease;
 }
-
 button:hover {
   background-color: #1a1a1a;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
-
-button:focus,
-button:focus-visible {
+button:focus, button:focus-visible {
   outline: 2px solid #000000;
   outline-offset: 2px;
 }
-
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
 }
 
-/* Inputs y forms */
-input,
-textarea,
-select {
+input, textarea, select {
   font-family: Arial, sans-serif;
   font-size: 1em;
   border-radius: 8px;
@@ -108,93 +71,76 @@ select {
   padding: 0.6em 1em;
   transition: border-color 0.3s ease;
 }
-
-input:focus,
-textarea:focus,
-select:focus {
+input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: #000000;
 }
 
-/* Imágenes responsive */
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
+img { max-width: 100%; height: auto; display: block; }
 
-/* Smooth scroll */
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
-/* Accesibilidad - Focus visible WCAG */
 *:focus-visible {
   outline: 2px solid #000000;
   outline-offset: 2px;
 }
 
-/* Screen reader only */
 .sr-only {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
 }
 
-/* Eliminar estilos de modo oscuro - Solo modo claro profesional */
 @media (prefers-color-scheme: dark) {
-  :root {
-    color: #000000;
-    background-color: #ffffff;
-  }
-  
-  body {
-    background-color: #ffffff;
-    color: #000000;
-  }
+  :root { color: #000000; background-color: #ffffff; }
+  body { background-color: #ffffff; color: #000000; }
 }
 
-/* Responsive typography */
 @media (max-width: 768px) {
-  :root {
-    font-size: 16px; /* Base para mobile */
-  }
-  
-  h1 {
-    font-size: 2.5em;
-  }
-  
-  h2 {
-    font-size: 2em;
-  }
-  
-  h3 {
-    font-size: 1.5em;
-  }
+  :root { font-size: 16px; }
+  h1 { font-size: 2.5em; }
+  h2 { font-size: 2em; }
+  h3 { font-size: 1.5em; }
 }
 
-/* Animaciones globales suaves */
 * {
   transition-property: background-color, border-color, color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Prevenir overflow horizontal */
-html,
-body {
-  overflow-x: hidden;
+@media (hover: none) and (pointer: coarse) {
+  button { min-height: 44px; min-width: 44px; }
 }
 
-/* Optimización para touch devices */
-@media (hover: none) and (pointer: coarse) {
-  button {
-    min-height: 44px; /* Tamaño mínimo táctil WCAG */
-    min-width: 44px;
-  }
+/* Renombrado de #root a clase para no afectar nada del layout del dashboard */
+.app-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
 }
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover { filter: drop-shadow(0 0 2em #646cffaa); }
+.logo.react:hover { filter: drop-shadow(0 0 2em #61dafbaa); }
+
+@keyframes logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo { animation: logo-spin infinite 20s linear; }
+}
+
+.card { padding: 2em; }
+.read-the-docs { color: #888; }

@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { doc, updateDoc, serverTimestamp, arrayUnion, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp, arrayUnion, getDoc, addDoc, collection } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { calcularNuevasCalificaciones } from '../utils/calificaciones';
 
@@ -101,6 +101,16 @@ function ModalCalificacion({ solicitud, onClose, onCalificar }) {
           'calificaciones.estrellas': nuevasCalificaciones.estrellas,
         });
       }
+
+      // 3. Guardar reseña pública en colección "reseñas"
+      await addDoc(collection(db, 'reseñas'), {
+        transportistaId: solicitud.transportistaId,
+        solicitudId: solicitud.id,
+        clienteNombre: solicitud.nombreCliente || 'Cliente',
+        estrellas: calificacion,
+        comentario: comentario.trim() || '',
+        fecha: serverTimestamp(),
+      });
 
       alert('Calificación enviada correctamente');
       if (onCalificar) onCalificar();
