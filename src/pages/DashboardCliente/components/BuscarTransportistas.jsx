@@ -3,6 +3,12 @@ import { collection, getDocs, query, where, orderBy, limit } from "firebase/fire
 import { db } from "../../../firebase/firebase";
 import ModalSolicitud from "./ModalSolicitud";
 
+// Optimiza URLs de Cloudinary para mostrar imágenes nítidas al tamaño correcto
+const clImg = (url, w = 800, h = 560) => {
+  if (!url || !url.includes('cloudinary.com')) return url;
+  return url.replace('/upload/', `/upload/w_${w},h_${h},c_fill,q_auto,f_auto/`);
+};
+
 // ========== ICONOS ==========
 const IconStar = ({ filled }) => (
   <svg className="w-4 h-4" fill={filled ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
@@ -493,7 +499,7 @@ function BuscarTransportistas({ usuario, onNavigate }) {
                   <h3 className="font-bold text-slate-900 mb-3">Fotos del Vehículo</h3>
                   <div className="relative rounded-2xl overflow-hidden bg-slate-100 shadow-md" style={{ height: '260px' }}>
                     <img
-                      src={selectedTransportista.vehiculo.fotos[fotoVehiculoIdx]}
+                      src={clImg(selectedTransportista.vehiculo.fotos[fotoVehiculoIdx])}
                       alt="Vehículo"
                       className="w-full h-full object-cover transition-opacity duration-200"
                     />
