@@ -108,7 +108,7 @@ function ModalDetalleFlete({ solicitud: solicitudInicial, onClose, onAbrirCalifi
           type="button"
           aria-label="Cerrar"
         >
-          <IconX />
+          X
         </button>
 
         <div className="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0 relative">
