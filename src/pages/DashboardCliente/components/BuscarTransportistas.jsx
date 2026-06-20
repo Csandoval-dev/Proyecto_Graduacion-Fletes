@@ -491,39 +491,52 @@ function BuscarTransportistas({ usuario, onNavigate }) {
               {selectedTransportista.vehiculo?.fotos?.length > 0 && (
                 <div>
                   <h3 className="font-bold text-slate-900 mb-3">Fotos del Vehículo</h3>
-                  <div className="relative rounded-xl overflow-hidden bg-slate-100" style={{height: '200px'}}>
+                  <div className="relative rounded-2xl overflow-hidden bg-slate-100 shadow-md" style={{ height: '260px' }}>
                     <img
                       src={selectedTransportista.vehiculo.fotos[fotoVehiculoIdx]}
                       alt="Vehículo"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-opacity duration-200"
                     />
+                    {/* Gradiente inferior */}
+                    <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+                    {/* Badge tipo vehículo */}
+                    {selectedTransportista.vehiculo?.tipo && (
+                      <span className="absolute top-3 left-3 bg-black/60 text-white text-[11px] font-bold px-2.5 py-1 rounded-full backdrop-blur-sm capitalize">
+                        {selectedTransportista.vehiculo.tipo}
+                      </span>
+                    )}
                     {selectedTransportista.vehiculo.fotos.length > 1 && (
                       <>
-                        <div className="absolute bottom-2 right-2 flex gap-1">
+                        {/* Dots centrados en la parte inferior */}
+                        <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
                           {selectedTransportista.vehiculo.fotos.map((_, i) => (
                             <button
                               key={i}
                               onClick={() => setFotoVehiculoIdx(i)}
-                              className={`w-2.5 h-2.5 rounded-full transition-all ${
-                                i === fotoVehiculoIdx ? 'bg-white scale-125' : 'bg-white/50'
+                              className={`rounded-full transition-all duration-200 ${
+                                i === fotoVehiculoIdx
+                                  ? 'bg-white w-5 h-2'
+                                  : 'bg-white/50 w-2 h-2 hover:bg-white/75'
                               }`}
                             />
                           ))}
                         </div>
+                        {/* Flechas de navegación */}
                         <button
                           onClick={() => setFotoVehiculoIdx(i => Math.max(0, i - 1))}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/60 transition"
+                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full w-9 h-9 flex items-center justify-center hover:bg-black/75 transition text-lg font-bold shadow"
                         >&#8249;</button>
                         <button
                           onClick={() => setFotoVehiculoIdx(i => Math.min(selectedTransportista.vehiculo.fotos.length - 1, i + 1))}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/60 transition"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full w-9 h-9 flex items-center justify-center hover:bg-black/75 transition text-lg font-bold shadow"
                         >&#8250;</button>
+                        {/* Contador */}
+                        <span className="absolute bottom-3 right-3 bg-black/50 text-white text-[11px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm">
+                          {fotoVehiculoIdx + 1}/{selectedTransportista.vehiculo.fotos.length}
+                        </span>
                       </>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500 mt-1 text-right">
-                    {fotoVehiculoIdx + 1} / {selectedTransportista.vehiculo.fotos.length}
-                  </p>
                 </div>
               )}
 
